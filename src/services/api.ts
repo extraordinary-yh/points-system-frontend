@@ -11,6 +11,7 @@ export interface User {
   role: 'student' | 'company' | 'university' | 'admin';
   total_points: number;
   discord_username?: string;
+  discord_id?: string;
   university?: string;
   major?: string;
   graduation_year?: number;
@@ -65,6 +66,18 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+// Discord Link Types
+export interface DiscordLinkCode {
+  code: string;
+  expires_at: string;
+  used_at: string | null;
+}
+
+export interface DiscordLinkStatus {
+  linked: boolean;
+  discord_id?: string;
+}
+
 class ApiService {
   private token: string | null = null;
 
@@ -75,9 +88,15 @@ class ApiService {
     }
   }
 
+  // Set token for NextAuth integration
+  setToken(token: string | null) {
+    this.token = token;
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    overrideToken?: string | null
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
     
@@ -86,8 +105,10 @@ class ApiService {
       ...(options.headers as Record<string, string>),
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    // Use override token if provided, otherwise use instance token
+    const activeToken = overrideToken !== undefined ? overrideToken : this.token;
+    if (activeToken) {
+      headers['Authorization'] = `Bearer ${activeToken}`;
     }
 
     try {
@@ -113,15 +134,18 @@ class ApiService {
   }
 
   // Authentication methods
-  async login(credentials: { username: string; password: string }): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.request<{ user: User; token: string }>('/users/login/', {
+  async login(credentials: { username: string; password: string }): Promise<ApiResponse<{ user: User; tokens: { access: string; refresh: string } }>> {
+    const response = await this.request<{ user: User; tokens: { access: string; refresh: string } }>('/users/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
 
-    if (response.data?.token) {
-      this.token = response.data.token;
+    if (response.data?.tokens?.access) {
+      this.token = response.data.tokens.access;
       localStorage.setItem('authToken', this.token);
+      localStorage.setItem('refreshToken', response.data.tokens.refresh);
+      console.log('✅ JWT Tokens stored successfully!');
+      console.log('✅ Access token:', this.token.substring(0, 20) + '...');
     }
 
     return response;
@@ -137,22 +161,24 @@ class ApiService {
     major?: string;
     graduation_year?: number;
     company?: string;
-  }): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.request<{ user: User; token: string }>('/users/register/', {
+  }): Promise<ApiResponse<{ user: User; tokens: { access: string; refresh: string } }>> {
+    const response = await this.request<{ user: User; tokens: { access: string; refresh: string } }>('/users/register/', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
 
-    if (response.data?.token) {
-      this.token = response.data.token;
+    if (response.data?.tokens?.access) {
+      this.token = response.data.tokens.access;
       localStorage.setItem('authToken', this.token);
+      localStorage.setItem('refreshToken', response.data.tokens.refresh);
+      console.log('✅ JWT Tokens stored successfully after registration!');
     }
 
     return response;
   }
 
-  async getProfile(): Promise<ApiResponse<User>> {
-    return this.request<User>('/users/profile/');
+  async getProfile(token?: string): Promise<ApiResponse<User>> {
+    return this.request<User>('/users/profile/', {}, token);
   }
 
   logout(): void {
@@ -161,63 +187,76 @@ class ApiService {
   }
 
   isAuthenticated(): boolean {
+    // Always check localStorage for the latest token
+    if (typeof window !== 'undefined') {
+      this.token = localStorage.getItem('authToken');
+    }
     return !!this.token;
   }
 
+  // Method to refresh token from localStorage
+  refreshToken(): void {
+    if (typeof window !== 'undefined') {
+      this.token = localStorage.getItem('authToken');
+    }
+  }
+
   // Points and Activities
-  async getActivities(): Promise<ApiResponse<Activity[]>> {
-    return this.request<Activity[]>('/activities/');
+  async getActivities(token?: string): Promise<ApiResponse<Activity[]>> {
+    return this.request<Activity[]>('/activities/', {}, token);
   }
 
-  async getPointsHistory(): Promise<ApiResponse<PointsLog[]>> {
-    return this.request<PointsLog[]>('/points-logs/');
+  async getPointsHistory(token?: string): Promise<ApiResponse<PointsLog[]>> {
+    return this.request<PointsLog[]>('/points-logs/', {}, token);
   }
 
-  async addPoints(userId: number, activityId: number, details?: string): Promise<ApiResponse<PointsLog>> {
+  async addPoints(userId: number, activityId: number, details?: string, token?: string): Promise<ApiResponse<PointsLog>> {
     return this.request<PointsLog>(`/users/${userId}/add_points/`, {
       method: 'POST',
       body: JSON.stringify({ activity_id: activityId, details }),
-    });
+    }, token);
   }
 
   // Incentives and Redemptions
-  async getIncentives(): Promise<ApiResponse<Incentive[]>> {
-    return this.request<Incentive[]>('/incentives/');
+  async getIncentives(token?: string): Promise<ApiResponse<Incentive[]>> {
+    return this.request<Incentive[]>('/incentives/', {}, token);
   }
 
-  async redeemIncentive(incentiveId: number): Promise<ApiResponse<Redemption>> {
+  async redeemIncentive(incentiveId: number, token?: string): Promise<ApiResponse<Redemption>> {
     return this.request<Redemption>('/redemptions/redeem/', {
       method: 'POST',
       body: JSON.stringify({ incentive_id: incentiveId }),
-    });
+    }, token);
   }
 
-  async getRedemptions(): Promise<ApiResponse<Redemption[]>> {
-    return this.request<Redemption[]>('/redemptions/');
+  async getRedemptions(token?: string): Promise<ApiResponse<Redemption[]>> {
+    return this.request<Redemption[]>('/redemptions/', {}, token);
   }
 
   // Admin methods
-  async approveRedemption(redemptionId: number, notes?: string): Promise<ApiResponse<Redemption>> {
+  async approveRedemption(redemptionId: number, notes?: string, token?: string): Promise<ApiResponse<Redemption>> {
     return this.request<Redemption>(`/redemptions/${redemptionId}/approve/`, {
       method: 'POST',
       body: JSON.stringify({ admin_notes: notes }),
-    });
+    }, token);
   }
 
-  async rejectRedemption(redemptionId: number, notes?: string): Promise<ApiResponse<Redemption>> {
+  async rejectRedemption(redemptionId: number, notes?: string, token?: string): Promise<ApiResponse<Redemption>> {
     return this.request<Redemption>(`/redemptions/${redemptionId}/reject/`, {
       method: 'POST',
       body: JSON.stringify({ admin_notes: notes }),
-    });
+    }, token);
   }
 
   // Discord Integration
-  async startDiscordLink(): Promise<ApiResponse<{ link_url: string }>> {
-    return this.request<{ link_url: string }>('/link/start');
+  async startDiscordLink(token?: string): Promise<ApiResponse<DiscordLinkCode>> {
+    return this.request<DiscordLinkCode>('/link/start', {
+      method: 'POST',
+    }, token);
   }
 
-  async checkDiscordLinkStatus(): Promise<ApiResponse<{ status: string; discord_username?: string }>> {
-    return this.request<{ status: string; discord_username?: string }>('/link/status');
+  async checkDiscordLinkStatus(token?: string): Promise<ApiResponse<DiscordLinkStatus>> {
+    return this.request<DiscordLinkStatus>('/link/status', {}, token);
   }
 }
 
