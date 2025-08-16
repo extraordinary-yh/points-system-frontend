@@ -1,10 +1,10 @@
 'use client';
 import React from "react";
 import { FiChevronDown, FiChevronUp, FiLogOut } from "react-icons/fi";
-import { useAuth } from "../../hooks/useAuth";
+import { useSession, signOut } from "next-auth/react";
 
 export const AccountToggle = () => {
-  const { user, logout } = useAuth();
+  const { data: session } = useSession();
 
   return (
     <div className="border-b mb-4 mt-2 pb-4 border-stone-300">
@@ -15,12 +15,12 @@ export const AccountToggle = () => {
           className="size-8 rounded shrink-0 bg-violet-500 shadow"
         />
         <div className="text-start flex-1">
-          <span className="text-sm font-bold block">{user?.username || 'User'}</span>
-          <span className="text-xs block text-stone-500">{user?.email || 'user@propel2excel.com'}</span>
+          <span className="text-sm font-bold block">{session?.user?.username || 'User'}</span>
+          <span className="text-xs block text-stone-500">{session?.user?.email || 'user@propel2excel.com'}</span>
         </div>
 
         <button
-          onClick={logout}
+          onClick={() => signOut()}
           className="p-1 hover:bg-stone-200 rounded transition-colors"
           title="Logout"
         >

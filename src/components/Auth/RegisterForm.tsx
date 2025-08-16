@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import { signIn } from 'next-auth/react';
+import { apiService } from '../../services/api';
 
 export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void }) => {
-  const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -29,7 +29,24 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
         Object.entries(formData).filter(([_, value]) => value !== '')
       ) as typeof formData;
       
-      await register(cleanData);
+      // Call Django registration API directly
+      const response = await apiService.register(cleanData);
+      
+      if (response.data) {
+        // Registration successful, now sign in with NextAuth
+        const result = await signIn('credentials', {
+          username: cleanData.username,
+          password: cleanData.password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError('Registration successful but automatic login failed. Please try logging in manually.');
+        }
+        // If successful, NextAuth will handle the session
+      } else {
+        setError(response.error || 'Registration failed');
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Registration failed');
     } finally {

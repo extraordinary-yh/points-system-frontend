@@ -1,9 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import { signIn } from 'next-auth/react';
 
 export const LoginForm = ({ onSwitchToRegister }: { onSwitchToRegister: () => void }) => {
-  const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,9 +13,18 @@ export const LoginForm = ({ onSwitchToRegister }: { onSwitchToRegister: () => vo
     setError('');
 
     try {
-      await login(credentials);
+      const result = await signIn('credentials', {
+        username: credentials.username,
+        password: credentials.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Invalid credentials');
+      }
+      // If successful, NextAuth will handle the session
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Login failed');
+      setError('Login failed');
     } finally {
       setLoading(false);
     }

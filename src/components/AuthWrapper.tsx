@@ -1,6 +1,6 @@
 'use client';
-import { AuthProvider } from '../hooks/useAuth';
+import { SessionProvider } from 'next-auth/react';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return <SessionProvider>{children}</SessionProvider>;
 }
