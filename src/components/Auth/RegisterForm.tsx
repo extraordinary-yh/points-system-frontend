@@ -42,8 +42,12 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
 
         if (result?.error) {
           setError('Registration successful but automatic login failed. Please try logging in manually.');
+        } else {
+          // Mark this as a fresh registration for proper onboarding redirect
+          localStorage.setItem('freshRegistration', 'true');
         }
-        // If successful, NextAuth will handle the session
+        // Note: No manual redirect needed - the root page will automatically
+        // detect new users and redirect to onboarding appropriately
       } else {
         setError(response.error || 'Registration failed');
       }

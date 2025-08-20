@@ -138,7 +138,7 @@ class ApiService {
     const response = await this.request<{ user: User; tokens: { access: string; refresh: string } }>('/users/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
-    });
+    }, null); // Explicitly pass null to ensure no auth token is sent
 
     if (response.data?.tokens?.access) {
       this.token = response.data.tokens.access;
@@ -165,7 +165,7 @@ class ApiService {
     const response = await this.request<{ user: User; tokens: { access: string; refresh: string } }>('/users/register/', {
       method: 'POST',
       body: JSON.stringify(userData),
-    });
+    }, null); // Explicitly pass null to ensure no auth token is sent
 
     if (response.data?.tokens?.access) {
       this.token = response.data.tokens.access;
@@ -184,6 +184,17 @@ class ApiService {
   logout(): void {
     this.token = null;
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+  }
+
+  // Clear invalid tokens (useful for debugging auth issues)
+  clearInvalidTokens(): void {
+    this.token = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      console.log('🧹 Cleared potentially invalid tokens');
+    }
   }
 
   isAuthenticated(): boolean {
@@ -257,6 +268,27 @@ class ApiService {
 
   async checkDiscordLinkStatus(token?: string): Promise<ApiResponse<DiscordLinkStatus>> {
     return this.request<DiscordLinkStatus>('/link/status', {}, token);
+  }
+
+  // Onboarding tracking methods
+  async updateConsentStatus(consented: boolean, token?: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request<{ success: boolean }>('/users/consent/', {
+      method: 'POST',
+      body: JSON.stringify({ media_consent: consented }),
+    }, token);
+  }
+
+  async trackLinkedInFollow(platform: 'company' | 'founder', token?: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request<{ success: boolean }>('/users/linkedin-follow/', {
+      method: 'POST',
+      body: JSON.stringify({ platform }),
+    }, token);
+  }
+
+  async completeOnboarding(token?: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request<{ success: boolean }>('/users/complete-onboarding/', {
+      method: 'POST',
+    }, token);
   }
 }
 
