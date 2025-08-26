@@ -1,25 +1,28 @@
 import React, { useState } from "react";
 import { IconType } from "react-icons";
+import { useRouter } from "next/navigation";
 import { 
   FiHome, 
-  FiTarget, 
   FiGift, 
-  FiClock, 
   FiUser,
-  FiBarChart
+  FiAward
 } from "react-icons/fi";
 
 export const RouteSelect = () => {
   const [selectedRoute, setSelectedRoute] = useState("Dashboard");
+  const router = useRouter();
 
   const routes = [
-    { icon: FiHome, title: "Dashboard" },
-    { icon: FiTarget, title: "Activities" },
-    { icon: FiGift, title: "Rewards" },
-    { icon: FiClock, title: "History" },
-    { icon: FiBarChart, title: "Analytics" },
-    { icon: FiUser, title: "Profile" }
+    { icon: FiHome, title: "Dashboard", href: "/dashboard" },
+    { icon: FiGift, title: "Rewards", href: "/rewards" },
+    { icon: FiAward, title: "Leaderboard", href: "/leaderboard" },
+    { icon: FiUser, title: "Profile", href: "/profile" }
   ];
+
+  const handleRouteClick = (route: typeof routes[0]) => {
+    setSelectedRoute(route.title);
+    router.push(route.href);
+  };
 
   return (
     <div className="space-y-1">
@@ -29,7 +32,7 @@ export const RouteSelect = () => {
           Icon={route.icon} 
           selected={selectedRoute === route.title} 
           title={route.title}
-          onClick={() => setSelectedRoute(route.title)}
+          onClick={() => handleRouteClick(route)}
         />
       ))}
     </div>
