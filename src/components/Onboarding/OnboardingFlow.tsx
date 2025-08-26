@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DiscordLinking } from './DiscordLinking';
 import { ConsentAgreement } from './ConsentAgreement';
 import { LinkedInFollow } from './LinkedInFollow';
 
@@ -10,8 +11,12 @@ interface OnboardingFlowProps {
 
 export const OnboardingFlow = ({ userName }: OnboardingFlowProps) => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<'consent' | 'linkedin' | 'complete'>('consent');
+  const [currentStep, setCurrentStep] = useState<'discord' | 'consent' | 'linkedin' | 'complete'>('discord');
   const [consentAccepted, setConsentAccepted] = useState<boolean | null>(null);
+
+  const handleDiscordComplete = () => {
+    setCurrentStep('consent');
+  };
 
   const handleConsentComplete = (accepted: boolean) => {
     setConsentAccepted(accepted);
@@ -32,16 +37,19 @@ export const OnboardingFlow = ({ userName }: OnboardingFlowProps) => {
       <div className="pt-8 pb-4">
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex items-center justify-center space-x-4">
-            <div className={`w-3 h-3 rounded-full ${currentStep === 'consent' ? 'bg-violet-600' : 'bg-violet-300'}`} />
-            <div className="w-12 h-0.5 bg-violet-200" />
-            <div className={`w-3 h-3 rounded-full ${currentStep === 'linkedin' ? 'bg-violet-600' : currentStep === 'complete' ? 'bg-violet-600' : 'bg-violet-200'}`} />
-            <div className="w-12 h-0.5 bg-violet-200" />
+            <div className={`w-3 h-3 rounded-full ${currentStep === 'discord' ? 'bg-violet-600' : (currentStep === 'consent' || currentStep === 'linkedin' || currentStep === 'complete') ? 'bg-violet-400' : 'bg-violet-200'}`} />
+            <div className="w-8 h-0.5 bg-violet-200" />
+            <div className={`w-3 h-3 rounded-full ${currentStep === 'consent' ? 'bg-violet-600' : (currentStep === 'linkedin' || currentStep === 'complete') ? 'bg-violet-400' : 'bg-violet-200'}`} />
+            <div className="w-8 h-0.5 bg-violet-200" />
+            <div className={`w-3 h-3 rounded-full ${currentStep === 'linkedin' ? 'bg-violet-600' : currentStep === 'complete' ? 'bg-violet-400' : 'bg-violet-200'}`} />
+            <div className="w-8 h-0.5 bg-violet-200" />
             <div className={`w-3 h-3 rounded-full ${currentStep === 'complete' ? 'bg-violet-600' : 'bg-violet-200'}`} />
           </div>
           <div className="text-center mt-2">
             <span className="text-sm text-stone-600">
-              {currentStep === 'consent' && 'Step 1 of 2'}
-              {currentStep === 'linkedin' && 'Step 2 of 2'}
+              {currentStep === 'discord' && 'Step 1 of 3'}
+              {currentStep === 'consent' && 'Step 2 of 3'}
+              {currentStep === 'linkedin' && 'Step 3 of 3'}
               {currentStep === 'complete' && 'Complete!'}
             </span>
           </div>
@@ -50,6 +58,13 @@ export const OnboardingFlow = ({ userName }: OnboardingFlowProps) => {
 
       {/* Content */}
       <div className="flex items-center justify-center px-4">
+        {currentStep === 'discord' && (
+          <DiscordLinking 
+            userName={userName}
+            onComplete={handleDiscordComplete}
+          />
+        )}
+
         {currentStep === 'consent' && (
           <ConsentAgreement 
             userName={userName}
