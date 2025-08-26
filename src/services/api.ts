@@ -18,6 +18,8 @@ export interface User {
   company?: string;
   is_suspended: boolean;
   suspension_reason?: string;
+  onboarding_completed?: boolean;
+  onboarding_completed_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -121,7 +123,7 @@ class ApiService {
 
       if (!response.ok) {
         return {
-          error: data.error || data.detail || `HTTP ${response.status}`,
+          error: data.error || data.detail || data || `HTTP ${response.status}`,
         };
       }
 
@@ -156,13 +158,29 @@ class ApiService {
     email: string;
     password: string;
     role: string;
-    discord_username?: string;
+    first_name?: string;
+    last_name?: string;
     university?: string;
     major?: string;
     graduation_year?: number;
     company?: string;
-  }): Promise<ApiResponse<{ user: User; tokens: { access: string; refresh: string } }>> {
-    const response = await this.request<{ user: User; tokens: { access: string; refresh: string } }>('/users/register/', {
+    discord_data?: {
+      discord_username: string;
+    };
+  }): Promise<ApiResponse<{ 
+    user: User; 
+    tokens: { access: string; refresh: string };
+    message?: string;
+    discord_verification_required?: boolean;
+    discord_username_pending?: string;
+  }>> {
+    const response = await this.request<{ 
+      user: User; 
+      tokens: { access: string; refresh: string };
+      message?: string;
+      discord_verification_required?: boolean;
+      discord_username_pending?: string;
+    }>('/users/register/', {
       method: 'POST',
       body: JSON.stringify(userData),
     }, null); // Explicitly pass null to ensure no auth token is sent
@@ -260,6 +278,20 @@ class ApiService {
   }
 
   // Discord Integration
+  async validateDiscordUser(discordUsername: string): Promise<ApiResponse<{
+    valid: boolean;
+    message: string;
+    discord_username: string;
+    discord_id: string | null;
+    display_name?: string;
+    username?: string;
+  }>> {
+    return this.request('/validate-discord-user/', {
+      method: 'POST',
+      body: JSON.stringify({ discord_username: discordUsername.trim() }),
+    }, null); // No auth required for validation
+  }
+
   async startDiscordLink(token?: string): Promise<ApiResponse<DiscordLinkCode>> {
     return this.request<DiscordLinkCode>('/link/start', {
       method: 'POST',
@@ -286,7 +318,7 @@ class ApiService {
   }
 
   async completeOnboarding(token?: string): Promise<ApiResponse<{ success: boolean }>> {
-    return this.request<{ success: boolean }>('/users/complete-onboarding/', {
+    return this.request<{ success: boolean }>('/users/complete_onboarding/', {
       method: 'POST',
     }, token);
   }
