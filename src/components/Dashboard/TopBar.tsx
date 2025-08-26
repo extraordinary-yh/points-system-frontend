@@ -1,5 +1,4 @@
 import React from "react";
-import { FiCalendar } from "react-icons/fi";
 import { useSession } from "next-auth/react";
 
 export const TopBar = () => {
@@ -26,11 +25,6 @@ export const TopBar = () => {
             {formatDate()}
           </span>
         </div>
-
-        <button className="flex text-sm items-center gap-2 bg-stone-100 transition-colors hover:bg-violet-100 hover:text-violet-700 px-3 py-1.5 rounded">
-          <FiCalendar />
-          <span>Prev 6 Months</span>
-        </button>
       </div>
     </div>
   );

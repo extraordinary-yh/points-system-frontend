@@ -40,6 +40,8 @@ export interface PointsLog {
   points_earned: number;
   details: string;
   timestamp: string;
+  // New field from enhanced backend
+  activity_category?: string;
 }
 
 export interface Incentive {
@@ -51,21 +53,35 @@ export interface Incentive {
   max_redemptions: number;
   current_redemptions: number;
   is_active: boolean;
+  // New fields from backend
+  category?: string;
+  category_display?: string;
+  image_url?: string;
+  stock_available?: number;
+  can_redeem?: boolean;
 }
 
 export interface Redemption {
   id: number;
   user: User;
   incentive: Incentive;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'shipped' | 'delivered' | 'rejected';
   redemption_date: string;
   admin_notes?: string;
+  // New fields from backend
+  delivery_details?: any;
+  tracking_info?: string;
+  estimated_delivery?: string;
+  status_display?: string;
+  incentive_image_url?: string;
 }
 
 interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
+  statusCode?: number;
+  isNetworkError?: boolean;
 }
 
 // Discord Link Types
@@ -78,6 +94,91 @@ export interface DiscordLinkCode {
 export interface DiscordLinkStatus {
   linked: boolean;
   discord_id?: string;
+}
+
+// New types for enhanced backend features
+export interface DashboardStats {
+  current_period: {
+    total_points: number;
+    activities_completed: number;
+    points_earned: number;
+    start_date: string;
+    end_date: string;
+  };
+  previous_period: {
+    total_points: number;
+    activities_completed: number;
+    points_earned: number;
+    start_date: string;
+    end_date: string;
+  };
+  trends: {
+    total_points: {
+      change: number;
+      percentage: number;
+      direction: 'up' | 'down';
+    };
+    activities_completed: {
+      change: number;
+      percentage: number;
+      direction: 'up' | 'down';
+    };
+    points_earned: {
+      change: number;
+      percentage: number;
+      direction: 'up' | 'down';
+    };
+  };
+}
+
+export interface TimelineData {
+  timeline: {
+    date: string;
+    points_earned: number;
+    cumulative_points: number;
+    activities_count: number;
+  }[];
+  summary: {
+    total_days: number;
+    total_points_earned: number;
+    average_daily_points: number;
+    most_active_date: string;
+  };
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: number;
+  username: string;
+  display_name: string;
+  total_points: number;
+  points_this_period: number;
+  avatar_url?: string;
+  is_current_user: boolean;
+}
+
+export interface LeaderboardData {
+  leaderboard: LeaderboardEntry[];
+  current_user_rank: LeaderboardEntry;
+  total_participants: number;
+}
+
+export interface UserPreferences {
+  email_notifications: {
+    new_activities?: boolean;
+    reward_updates?: boolean;
+    leaderboard_changes?: boolean;
+  };
+  privacy_settings: {
+    show_in_leaderboard?: boolean;
+    display_name_preference?: 'full_name' | 'first_name_only' | 'username';
+  };
+  display_preferences: any;
+  discord_integration?: {
+    is_linked: boolean;
+    discord_username?: string;
+    sync_activities?: boolean;
+  };
 }
 
 class ApiService {
@@ -124,13 +225,16 @@ class ApiService {
       if (!response.ok) {
         return {
           error: data.error || data.detail || data || `HTTP ${response.status}`,
+          statusCode: response.status,
         };
       }
 
       return { data };
     } catch (error) {
+      // Network error (backend unreachable, connection refused, etc.)
       return {
         error: error instanceof Error ? error.message : 'Network error',
+        isNetworkError: true,
       };
     }
   }
@@ -321,6 +425,66 @@ class ApiService {
     return this.request<{ success: boolean }>('/users/complete_onboarding/', {
       method: 'POST',
     }, token);
+  }
+
+  // NEW BACKEND ENDPOINTS
+  
+  // Dashboard Statistics with Trends
+  async getDashboardStats(period: '7days' | '30days' | '90days' = '30days', token?: string): Promise<ApiResponse<DashboardStats>> {
+    return this.request<DashboardStats>(`/dashboard/stats/?period=${period}`, {}, token);
+  }
+
+  // Points Timeline Chart
+  async getPointsTimeline(
+    granularity: 'daily' | 'weekly' | 'monthly' = 'daily',
+    days: number = 30,
+    token?: string
+  ): Promise<ApiResponse<TimelineData>> {
+    return this.request<TimelineData>(`/points/timeline/?granularity=${granularity}&days=${days}`, {}, token);
+  }
+
+  // Leaderboard System
+  async getLeaderboard(
+    limit: number = 10,
+    period: 'all_time' | 'monthly' | 'weekly' = 'all_time',
+    token?: string
+  ): Promise<ApiResponse<LeaderboardData>> {
+    return this.request<LeaderboardData>(`/leaderboard/?limit=${limit}&period=${period}`, {}, token);
+  }
+
+  // Enhanced Rewards System
+  async getAvailableRewards(token?: string): Promise<ApiResponse<Incentive[]>> {
+    return this.request<Incentive[]>('/rewards/available/', {}, token);
+  }
+
+  async redeemReward(rewardId: number, deliveryDetails?: any, token?: string): Promise<ApiResponse<Redemption>> {
+    return this.request<Redemption>('/rewards/redeem/', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        reward_id: rewardId,
+        delivery_details: deliveryDetails 
+      }),
+    }, token);
+  }
+
+  async getRedemptionHistory(token?: string): Promise<ApiResponse<Redemption[]>> {
+    return this.request<Redemption[]>('/redemptions/history/', {}, token);
+  }
+
+  // User Preferences Management
+  async getUserPreferences(token?: string): Promise<ApiResponse<UserPreferences>> {
+    return this.request<UserPreferences>('/user-preferences/', {}, token);
+  }
+
+  async updateUserPreferences(preferences: Partial<UserPreferences>, token?: string): Promise<ApiResponse<UserPreferences>> {
+    return this.request<UserPreferences>('/user-preferences/', {
+      method: 'PUT',
+      body: JSON.stringify(preferences),
+    }, token);
+  }
+
+  async getActivityPreferences(token?: string): Promise<ApiResponse<UserPreferences>> {
+    return this.request<UserPreferences>('/user-preferences/activity-preferences/', {}, token);
   }
 }
 

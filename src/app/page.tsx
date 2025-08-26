@@ -34,6 +34,13 @@ export default function Home() {
           if (session?.djangoAccessToken) {
             const response = await apiService.getProfile(session.djangoAccessToken);
             
+            // Check for network errors first
+            if (response.isNetworkError) {
+              console.log('Backend unreachable, assuming onboarding complete for authenticated user');
+              router.push("/dashboard");
+              return;
+            }
+            
             if (response.data) {
               if (!response.data.onboarding_completed) {
                 // Onboarding not completed - redirect to onboarding
@@ -43,8 +50,9 @@ export default function Home() {
                 router.push("/dashboard");
               }
             } else {
-              // If we can't get profile, assume onboarding not complete
-              router.push("/onboarding");
+              // If we can't get profile data but have djangoAccessToken, assume onboarding complete
+              // This handles cases where backend is down but user is authenticated
+              router.push("/dashboard");
             }
           } else {
             // Fallback: Check if this is a new user (account created within last 5 minutes)
@@ -63,8 +71,10 @@ export default function Home() {
           }
         } catch (error) {
           console.error('Error checking user status:', error);
-          // On error, redirect to onboarding to be safe
-          router.push("/onboarding");
+          
+          // For any error when checking user status, assume existing user and redirect to dashboard
+          // This handles network errors, backend downtime, etc.
+          router.push("/dashboard");
         } finally {
           setIsCheckingOnboarding(false);
         }
