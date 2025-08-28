@@ -5,7 +5,7 @@ import React from "react";
 // Skeleton for Activity Graph (Chart)
 export const ActivityGraphSkeleton = () => {
   return (
-    <div className="col-span-7 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col animate-pulse">
+    <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col animate-pulse">
       {/* Header */}
       <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm border-b border-slate-200/50">
         <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export const ActivityGraphSkeleton = () => {
 // Skeleton for Usage Radar (Pie Chart)
 export const UsageRadarSkeleton = () => {
   return (
-    <div className="col-span-5 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col animate-pulse">
+    <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col animate-pulse">
       {/* Header */}
       <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm border-b border-slate-200/50">
         <div className="flex items-center gap-2">
