@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { apiService, User } from "@/services/api";
 
 export default function DashboardPage() {
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const { isCollapsed } = useSidebar();
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -80,7 +82,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="grid gap-4 p-4 grid-cols-[220px,_1fr]">
+    <main className={`grid gap-4 p-4 transition-all duration-300 h-screen ${
+      isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
+    }`}>
       <Sidebar />
       <Dashboard />
     </main>

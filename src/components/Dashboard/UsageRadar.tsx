@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FiEye } from "react-icons/fi";
 import { useSharedDashboardData } from "../../hooks/useSharedDashboardData";
 import { UsageRadarSkeleton } from "./SkeletonLoaders";
@@ -24,6 +24,7 @@ interface CategoryData {
 
 export const UsageRadar = () => {
   const { categoryData, isLoading, error } = useSharedDashboardData();
+  const [hoveredSegment, setHoveredSegment] = useState<number | null>(null);
 
   // Show skeleton loader while loading
   if (isLoading) {
@@ -34,7 +35,7 @@ export const UsageRadar = () => {
   const enrichedCategoryData = categoryData;
 
   return (
-    <div className="col-span-5 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col">
+    <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col">
       {/* Modern header with glassmorphism effect */}
       <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm border-b border-slate-200/50">
         <h3 className="flex items-center gap-2 font-semibold text-slate-800">
@@ -49,7 +50,7 @@ export const UsageRadar = () => {
 
       <div className="flex-1 p-6">
         {enrichedCategoryData.length === 0 ? (
-          <div className="flex items-center justify-center h-full min-h-[320px] text-center">
+          <div className="flex items-center justify-center h-full min-h-[400px] text-center">
             <div className="p-8 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-inner">
               <div className="text-6xl mb-4 opacity-50">📊</div>
               <p className="font-semibold text-slate-700 mb-2">No Activity Data</p>
@@ -57,17 +58,16 @@ export const UsageRadar = () => {
             </div>
           </div>
         ) : (
-          <div className="relative h-full min-h-[320px] flex flex-col">
+          <div className="relative h-full min-h-[380px] flex flex-col">
             {/* Custom 3D Pie Chart - takes most space */}
-            <div className="flex-1 flex items-center justify-center pb-4">
-              {/* 3D Chart Container - bigger */}
-              <div className="relative w-72 h-72">
-                {/* 3D Shadow/Base */}
-                <div className="absolute inset-0 top-4 rounded-full bg-gradient-to-br from-slate-300/30 to-slate-400/30 blur-lg transform rotate-3"></div>
+            <div className="flex-1 flex items-center justify-center py-2">
+              {/* 3D Chart Container - optimized size with reduced white space */}
+              <div className="relative w-80 h-80">
+
                 
                 {/* Main Chart */}
                 <div className="relative w-full h-full">
-                  <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-2xl">
+                  <svg viewBox="0 0 200 200" className="w-full h-full">
                     <defs>
                       {/* Gradient definitions for each segment */}
                       {enrichedCategoryData.map((entry, index) => (
@@ -87,10 +87,30 @@ export const UsageRadar = () => {
                       
                       {/* Filter for 3D effect */}
                       <filter id="shadow3d" x="-50%" y="-50%" width="200%" height="200%">
-                        <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.3"/>
-                        <feDropShadow dx="0" dy="2" stdDeviation="8" floodOpacity="0.1"/>
+                        <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.15"/>
+                        <feDropShadow dx="0" dy="2" stdDeviation="8" floodOpacity="0.05"/>
                       </filter>
                     </defs>
+                    
+                    {/* Central Label - Total Points */}
+                    <text 
+                      x="100" 
+                      y="98" 
+                      textAnchor="middle" 
+                      className="fill-slate-700 font-bold"
+                      fontSize="12"
+                    >
+                      {enrichedCategoryData.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
+                    </text>
+                    <text 
+                      x="100" 
+                      y="108" 
+                      textAnchor="middle" 
+                      className="fill-slate-500 font-medium"
+                      fontSize="7"
+                    >
+                      Total Points
+                    </text>
                     
                     {/* Render pie segments */}
                     {(() => {
@@ -99,13 +119,16 @@ export const UsageRadar = () => {
                       const centerX = 100;
                       const centerY = 100;
                       const radius = 70;
-                      const innerRadius = 25;
+                      const innerRadius = 40;
                       
                       return enrichedCategoryData.map((entry, index) => {
                         const percentage = entry.value / total;
                         const angle = percentage * 360;
-                        const startAngle = (currentAngle * Math.PI) / 180;
-                        const endAngle = ((currentAngle + angle) * Math.PI) / 180;
+                        // Add small gap between segments
+                        const gapAngle = 2; // 2 degrees gap
+                        const adjustedAngle = angle - gapAngle;
+                        const startAngle = ((currentAngle + gapAngle/2) * Math.PI) / 180;
+                        const endAngle = ((currentAngle + gapAngle/2 + adjustedAngle) * Math.PI) / 180;
                         
                         const x1 = centerX + Math.cos(startAngle) * radius;
                         const y1 = centerY + Math.sin(startAngle) * radius;
@@ -141,8 +164,6 @@ export const UsageRadar = () => {
                             <path
                               d={pathData}
                               fill={`url(#gradient-3d-${index})`}
-                              stroke="rgba(255,255,255,0.3)"
-                              strokeWidth="1"
                               filter="url(#shadow3d)"
                               className="transition-all duration-300 group-hover:brightness-110"
                               transform={`translate(1, 2) translate(0, 0)`}
@@ -152,8 +173,6 @@ export const UsageRadar = () => {
                             <path
                               d={pathData}
                               fill={`url(#gradient-${index})`}
-                              stroke="rgba(255,255,255,0.8)"
-                              strokeWidth="2"
                               className="transition-all duration-300 group-hover:brightness-110"
                               filter="url(#shadow3d)"
                               style={{
@@ -173,82 +192,146 @@ export const UsageRadar = () => {
                               d={pathData}
                               fill="transparent"
                               className="cursor-pointer"
-                              onMouseEnter={(e) => {
-                                // Show tooltip
-                                const tooltip = document.getElementById(`tooltip-${index}`);
-                                if (tooltip) {
-                                  tooltip.style.opacity = '1';
-                                  tooltip.style.pointerEvents = 'auto';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                // Hide tooltip
-                                const tooltip = document.getElementById(`tooltip-${index}`);
-                                if (tooltip) {
-                                  tooltip.style.opacity = '0';
-                                  tooltip.style.pointerEvents = 'none';
-                                }
-                              }}
+                              onMouseEnter={() => setHoveredSegment(index)}
+                              onMouseLeave={() => setHoveredSegment(null)}
                             />
                           </g>
                         );
                       });
                     })()}
+                    
+
                   </svg>
                 </div>
               </div>
-              {/* Floating tooltips for each segment */}
-              {enrichedCategoryData.map((entry, index) => {
-                const total = enrichedCategoryData.reduce((sum, item) => sum + item.value, 0);
-                const percentage = ((entry.value / total) * 100).toFixed(1);
-                return (
-                  <div
-                    key={`tooltip-${index}`}
-                    id={`tooltip-${index}`}
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl shadow-xl px-4 py-3 pointer-events-none opacity-0 transition-all duration-200 z-10"
-                    style={{
-                      boxShadow: `0 10px 25px ${entry.color}20`
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-4 h-4 rounded-full shadow-sm"
-                        style={{ 
-                          background: entry.gradient,
-                          boxShadow: `0 2px 8px ${entry.color}40`
-                        }}
-                      ></div>
-                      <div>
-                        <p className="font-semibold text-slate-800 text-sm">{entry.name}</p>
-                        <p className="text-xs text-slate-600">{entry.value} points • {percentage}%</p>
+              {/* Enhanced floating tooltip - only show for hovered segment */}
+              {hoveredSegment !== null && (
+                (() => {
+                  const entry = enrichedCategoryData[hoveredSegment];
+                  const total = enrichedCategoryData.reduce((sum, item) => sum + item.value, 0);
+                  const percentage = ((entry.value / total) * 100).toFixed(1);
+                  const pointsFormatted = entry.value.toLocaleString();
+                  
+                  // Activity suggestions based on category
+                  const getActivitySuggestions = (categoryName: string) => {
+                    const suggestions: Record<string, string[]> = {
+                      'content': [
+                        'Upload your resume to Discord',
+                        'Complete your profile information',
+                        'Add portfolio links'
+                      ],
+                      'social': [
+                        'Engage in Discord discussions',
+                        'Participate in community events',
+                        'Help other students'
+                      ],
+                      'professional': [
+                        'Attend resume workshops',
+                        'Join career development sessions',
+                        'Connect with mentors'
+                      ],
+                      'events': [
+                        'Attend networking events',
+                        'Join company presentations',
+                        'Participate in webinars'
+                      ],
+                      'engagement': [
+                        'Be active in Discord channels',
+                        'Participate in Q&A sessions',
+                        'Share resources with peers'
+                      ],
+                      'learning': [
+                        'Complete skill-building workshops',
+                        'Attend educational sessions',
+                        'Share learning resources'
+                      ]
+                    };
+                    return suggestions[categoryName.toLowerCase()] || ['Stay engaged with community activities'];
+                  };
+                  
+                  const activitySuggestions = getActivitySuggestions(entry.name);
+                  
+                  return (
+                    <div
+                      className="absolute bg-white/80 backdrop-blur-md border border-white/50 rounded-2xl shadow-lg px-8 py-6 pointer-events-none z-20 min-w-[340px] max-w-[380px] transition-all duration-200"
+                      style={{
+                        boxShadow: `0 8px 20px ${entry.color}04, 0 4px 8px ${entry.color}06`,
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)'
+                      }}
+                    >
+                      <div className="flex items-start gap-4 mb-4">
+                        <div 
+                          className="w-6 h-6 rounded-xl shadow-sm flex-shrink-0 mt-0.5"
+                          style={{ 
+                            background: entry.gradient,
+                            boxShadow: `0 2px 6px ${entry.color}15`
+                          }}
+                        ></div>
+                        <div className="flex-1">
+                          <p className="font-bold text-slate-800 text-xl mb-4">{entry.name}</p>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-base text-slate-700 mr-6">Points:</span>
+                              <span className="font-semibold text-slate-800 text-lg">{pointsFormatted}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-base text-slate-700 mr-6">Percentage:</span>
+                              <span className="font-semibold text-slate-800 text-lg">{percentage}%</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t border-slate-200/40">
+                              <span className="text-base text-slate-700 mr-6">Of Total:</span>
+                              <span className="font-semibold text-slate-800 text-lg">{total.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
+                      
+                      {/* Activity Suggestions */}
+                      <div className="border-t border-slate-200/40 pt-4">
+                        <p className="text-sm font-semibold text-slate-700 mb-3">💡 Increase {entry.name} points by:</p>
+                        <ul className="space-y-2">
+                          {activitySuggestions.map((suggestion, idx) => (
+                            <li key={idx} className="text-sm text-slate-600 flex items-start">
+                              <span className="text-slate-400 mr-3">•</span>
+                              <span>{suggestion}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })()
+              )}
             </div>
             
-            {/* Compact Legend - cleaner version */}
-            <div className="flex-shrink-0 mt-2">
-              <div className="flex flex-wrap justify-center gap-2">
+            {/* Simple Legend */}
+            <div className="flex-shrink-0 mt-4">
+              <div className="flex flex-wrap justify-center gap-4">
                 {enrichedCategoryData.map((entry, index) => {
                   const total = enrichedCategoryData.reduce((sum, item) => sum + item.value, 0);
                   const percentage = ((entry.value / total) * 100).toFixed(1);
                   return (
-                    <div key={entry.name} className="flex items-center gap-1.5 px-2 py-1 bg-white/60 backdrop-blur-sm rounded-lg text-xs">
+                    <div 
+                      key={entry.name} 
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <div 
-                        className="w-2.5 h-2.5 rounded-full"
+                        className="w-3 h-3 rounded-full"
                         style={{ 
                           background: entry.gradient
                         }}
                       ></div>
                       <span className="font-medium text-slate-700">{entry.name}</span>
-                      <span className="text-slate-500 font-mono">{percentage}%</span>
+                      <span className="text-slate-500 font-mono text-xs">{percentage}%</span>
                     </div>
                   );
                 })}
               </div>
             </div>
+
           </div>
         )}
       </div>

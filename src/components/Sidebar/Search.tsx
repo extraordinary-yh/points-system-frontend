@@ -9,7 +9,7 @@ export const Search = () => {
 
   return (
     <>
-      <div className="bg-stone-200 mb-4 relative rounded flex items-center px-2 py-1.5 text-sm">
+      <div className="bg-stone-50 relative rounded flex items-center px-2 py-1.5 text-sm border border-stone-200 h-full">
         <FiSearch className="mr-2" />
         <input
           onFocus={(e) => {

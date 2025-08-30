@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IconType } from "react-icons";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { 
   FiHome, 
   FiGift, 
@@ -11,6 +12,8 @@ import {
 export const RouteSelect = () => {
   const [selectedRoute, setSelectedRoute] = useState("Dashboard");
   const router = useRouter();
+  const pathname = usePathname();
+  const { isCollapsed } = useSidebar();
 
   const routes = [
     { icon: FiHome, title: "Dashboard", href: "/dashboard" },
@@ -19,13 +22,21 @@ export const RouteSelect = () => {
     { icon: FiUser, title: "Profile", href: "/profile" }
   ];
 
+  // Update selected route based on current pathname
+  useEffect(() => {
+    const currentRoute = routes.find(route => route.href === pathname);
+    if (currentRoute) {
+      setSelectedRoute(currentRoute.title);
+    }
+  }, [pathname]);
+
   const handleRouteClick = (route: typeof routes[0]) => {
     setSelectedRoute(route.title);
     router.push(route.href);
   };
 
   return (
-    <div className="space-y-1">
+    <div className={`space-y-2 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
       {routes.map((route) => (
         <Route 
           key={route.title}
@@ -33,6 +44,7 @@ export const RouteSelect = () => {
           selected={selectedRoute === route.title} 
           title={route.title}
           onClick={() => handleRouteClick(route)}
+          isCollapsed={isCollapsed}
         />
       ))}
     </div>
@@ -44,23 +56,29 @@ const Route = ({
   Icon,
   title,
   onClick,
+  isCollapsed,
 }: {
   selected: boolean;
   Icon: IconType;
   title: string;
   onClick: () => void;
+  isCollapsed: boolean;
 }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-start gap-2 w-full rounded px-2 py-1.5 text-sm transition-[box-shadow,_background-color,_color] ${
+      className={`flex items-center gap-3 rounded-lg transition-[box-shadow,_background-color,_color] ${
+        isCollapsed 
+          ? "w-10 h-10 justify-center" 
+          : "w-full px-3 py-2 justify-start"
+      } ${
         selected
           ? "bg-white text-stone-950 shadow"
-          : "hover:bg-stone-200 bg-transparent text-stone-500 shadow-none"
+          : "hover:bg-gray-50 text-stone-500 shadow-none"
       }`}
     >
-      <Icon className={selected ? "text-violet-500" : ""} />
-      <span>{title}</span>
+      <Icon className={`${selected ? "text-violet-500" : ""} w-5 h-5`} />
+      {!isCollapsed && <span className="text-sm text-left">{title}</span>}
     </button>
   );
 };

@@ -28,44 +28,44 @@ interface CategoryData {
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
 
-// Purple-only color scheme using fallback gradient colors
+// New complementary color palette with strong contrast
 const CATEGORY_COLORS: Record<string, {color: string, gradient: string}> = {
   'engagement': {
-    color: '#8B5CF6',
-    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'
+    color: '#7C3AED',
+    gradient: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)'
   },
   'events': {
-    color: '#EC4899',
-    gradient: 'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)'
+    color: '#4C1D95',
+    gradient: 'linear-gradient(135deg, #4C1D95 0%, #6366F1 100%)'
   },
   'content': {
-    color: '#6366F1',
-    gradient: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)'
+    color: '#0EA5E9',
+    gradient: 'linear-gradient(135deg, #0EA5E9 0%, #67E8F9 100%)'
   },
   'professional': {
-    color: '#9333EA',
-    gradient: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)'
+    color: '#10B981',
+    gradient: 'linear-gradient(135deg, #10B981 0%, #6EE7B7 100%)'
   },
   'social': {
-    color: '#C084FC',
-    gradient: 'linear-gradient(135deg, #C084FC 0%, #DDD6FE 100%)'
+    color: '#3B82F6',
+    gradient: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)'
   },
   'learning': {
-    color: '#A855F7',
-    gradient: 'linear-gradient(135deg, #A855F7 0%, #8B5CF6 100%)'
+    color: '#7C3AED',
+    gradient: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)'
   }
 };
 
-// Purple-themed fallback colors with better distinction
+// New color palette fallback colors
 const FALLBACK_COLORS = [
-  '#8B5CF6', '#EC4899', '#6366F1', '#9333EA', '#C084FC'
+  '#7C3AED', '#4C1D95', '#0EA5E9', '#10B981', '#3B82F6'
 ];
 const FALLBACK_GRADIENTS = [
-  'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-  'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)',
-  'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
-  'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
-  'linear-gradient(135deg, #C084FC 0%, #DDD6FE 100%)'
+  'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
+  'linear-gradient(135deg, #4C1D95 0%, #6366F1 100%)',
+  'linear-gradient(135deg, #0EA5E9 0%, #67E8F9 100%)',
+  'linear-gradient(135deg, #10B981 0%, #6EE7B7 100%)',
+  'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)'
 ];
 
 // Global cache for dashboard data (shared across all components)

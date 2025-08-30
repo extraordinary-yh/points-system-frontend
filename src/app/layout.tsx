@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthWrapper } from "../components/AuthWrapper";
+import { SidebarProvider } from "../contexts/SidebarContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} text-stone-950 bg-stone-100`}>
         <AuthWrapper>
-          {children}
+          <SidebarProvider>
+            {children}
+          </SidebarProvider>
         </AuthWrapper>
       </body>
     </html>
