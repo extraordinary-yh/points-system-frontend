@@ -9,7 +9,7 @@ export const AccountToggle = () => {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="border-b mb-4 mt-2 pb-4 border-stone-300">
+    <div className="mt-1 pb-2">
       <div className="flex p-0.5 rounded transition-colors relative gap-2 w-full items-center">
         <img
           src="https://api.dicebear.com/9.x/notionists/svg"
