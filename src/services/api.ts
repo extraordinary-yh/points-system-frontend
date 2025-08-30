@@ -210,8 +210,11 @@ class ApiService {
 
     // Use override token if provided, otherwise use instance token
     const activeToken = overrideToken !== undefined ? overrideToken : this.token;
+    
     if (activeToken) {
       headers['Authorization'] = `Bearer ${activeToken}`;
+    } else {
+      console.warn('⚠️  No auth token - request may be unauthorized:', url);
     }
 
     try {

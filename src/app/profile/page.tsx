@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { apiService, User } from "@/services/api";
 
 export default function ProfilePage() {
@@ -10,6 +11,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const { isCollapsed } = useSidebar();
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -74,7 +76,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="grid gap-4 p-4 grid-cols-[220px,_1fr]">
+    <main className={`grid gap-4 p-4 transition-all duration-300 ${
+      isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
+    }`}>
       <Sidebar />
       <div className="bg-white rounded-lg pb-4 shadow">
           <div className="border-b px-4 mb-4 mt-2 pb-4 border-stone-200">
