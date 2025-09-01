@@ -775,25 +775,33 @@ const RedemptionHistory = ({ history }: { history: Redemption[] }) => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {redemption.incentive?.name || 'Unknown Reward'}
+                        {redemption.reward?.name || redemption.incentive?.name || 'Unknown Reward'}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {redemption.incentive?.description || 'No description available'}
-                      </p>
+                      {(redemption.reward?.description || redemption.incentive?.description) && (
+                        <p className="text-xs text-gray-500">
+                          {redemption.reward?.description || redemption.incentive?.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </td>
                 <td className="py-4 px-6">
                   <span className="text-sm text-gray-700">
-                    {new Date(redemption.redemption_date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric'
-                    })}
+                    {(() => {
+                      const dateStr = redemption.redeemed_at || redemption.redemption_date;
+                      if (dateStr) {
+                        return new Date(dateStr).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        });
+                      }
+                      return 'Invalid Date';
+                    })()}
                   </span>
                 </td>
                 <td className="py-4 px-6">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                    -{redemption.incentive?.points_required || 0}
+                    -{redemption.points_spent || redemption.incentive?.points_required || 0}
                   </span>
                 </td>
                 <td className="py-4 px-6">

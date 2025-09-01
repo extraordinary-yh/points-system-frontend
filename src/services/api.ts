@@ -63,10 +63,23 @@ export interface Incentive {
 
 export interface Redemption {
   id: number;
-  user: User;
-  incentive: Incentive;
+  user?: User;
+  // The actual API returns 'reward' not 'incentive'
+  reward?: {
+    name: string;
+    description?: string;
+    image_url?: string;
+    points_required?: number;
+  };
+  // Keep incentive for backwards compatibility
+  incentive?: Incentive;
   status: 'pending' | 'approved' | 'shipped' | 'delivered' | 'rejected';
-  redemption_date: string;
+  // The actual API returns 'redeemed_at' not 'redemption_date'
+  redeemed_at?: string;
+  // Keep redemption_date for backwards compatibility
+  redemption_date?: string;
+  // The actual API returns 'points_spent'
+  points_spent?: number;
   admin_notes?: string;
   // New fields from backend
   delivery_details?: any;
