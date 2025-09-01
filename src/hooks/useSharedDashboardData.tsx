@@ -80,6 +80,20 @@ let globalCache: DashboardData = {
 // Global subscribers to notify components of data changes
 let subscribers: Set<() => void> = new Set();
 
+// Global refresh function that can be called from anywhere
+let globalRefreshFunction: ((force?: boolean) => Promise<void>) | null = null;
+
+// Export function to trigger dashboard refresh from external components
+export const refreshDashboardData = async (force: boolean = false) => {
+  console.log('🔄 refreshDashboardData called with force:', force);
+  if (globalRefreshFunction) {
+    console.log('🔄 Executing global refresh function');
+    await globalRefreshFunction(force);
+  } else {
+    console.warn('⚠️ Global refresh function not available');
+  }
+};
+
 export const useSharedDashboardData = () => {
   const { data: session, status } = useSession();
   const [data, setData] = useState<DashboardData>(globalCache);
@@ -111,9 +125,14 @@ export const useSharedDashboardData = () => {
 
   // Fetch fresh data
   const fetchData = async (token: string) => {
+    console.log('🔄 fetchData called for dashboard data');
     // Prevent duplicate requests
-    if (globalCache.isLoading) return;
+    if (globalCache.isLoading) {
+      console.log('⚠️ fetchData already in progress, skipping');
+      return;
+    }
 
+    console.log('🔄 Starting fresh data fetch');
     globalCache.isLoading = true;
     globalCache.error = null;
     notifySubscribers();
@@ -189,6 +208,8 @@ export const useSharedDashboardData = () => {
       acc[category] = (acc[category] || 0) + log.points_earned;
       return acc;
     }, {});
+    
+    const totalFromCategories = Object.values(categoryTotals).reduce((sum, points) => sum + points, 0);
 
     // Sort categories alphabetically and assign consistent colors
     const categoryData = Object.entries(categoryTotals)
@@ -213,11 +234,31 @@ export const useSharedDashboardData = () => {
   };
 
   // Force refresh function
-  const refresh = async () => {
+  const refresh = async (force: boolean = false) => {
+    console.log('🔄 refresh called with force:', force, 'session available:', !!session?.djangoAccessToken);
     if (session?.djangoAccessToken) {
+      if (force) {
+        // Force refresh by clearing cache first
+        console.log('🔄 Force refresh - clearing cache');
+        globalCache.lastFetch = null;
+        globalCache.pointsHistory = null;
+        globalCache.timelineData = null;
+      }
       await fetchData(session.djangoAccessToken);
     }
   };
+
+  // Set the global refresh function
+  useEffect(() => {
+    globalRefreshFunction = refresh;
+    
+    return () => {
+      // Clean up global reference when component unmounts
+      if (globalRefreshFunction === refresh) {
+        globalRefreshFunction = null;
+      }
+    };
+  }, [session, status]); // Depend on session and status instead of refresh function
 
   // Clear cache (useful for logout, etc.)
   const clearCache = () => {

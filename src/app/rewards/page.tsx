@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
 import { apiService, User, Incentive, Redemption } from "@/services/api";
+import { refreshDashboardData } from "@/hooks/useSharedDashboardData";
+import { refreshStatCards } from "@/components/Dashboard/StatCards";
 import { Lock, Check, Gift, Trophy, Star, Heart, Zap, Award } from "lucide-react";
 
 export default function RewardsPage() {
@@ -176,6 +178,13 @@ const RewardsContent = () => {
     try {
       const response = await apiService.redeemReward(rewardId, {}, session.djangoAccessToken);
       if (response.data) {
+        // Refresh dashboard data to update points charts and graphs
+        await refreshDashboardData(true);
+        
+
+        // Refresh stat cards to update total points and available rewards
+        await refreshStatCards();
+        
         // Refresh data after successful redemption
         const [rewardsResponse, historyResponse] = await Promise.all([
           apiService.getAvailableRewards(session.djangoAccessToken),

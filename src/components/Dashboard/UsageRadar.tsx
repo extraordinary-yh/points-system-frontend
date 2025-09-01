@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiEye } from "react-icons/fi";
+import { FiEye, FiInfo } from "react-icons/fi";
 import { useSharedDashboardData } from "../../hooks/useSharedDashboardData";
 import { UsageRadarSkeleton } from "./SkeletonLoaders";
 import {
@@ -25,6 +25,7 @@ interface CategoryData {
 export const UsageRadar = () => {
   const { categoryData, isLoading, error } = useSharedDashboardData();
   const [hoveredSegment, setHoveredSegment] = useState<number | null>(null);
+  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
 
   // Show skeleton loader while loading
   if (isLoading) {
@@ -38,14 +39,34 @@ export const UsageRadar = () => {
     <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col">
       {/* Modern header with glassmorphism effect */}
       <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm border-b border-slate-200/50">
-        <h3 className="flex items-center gap-2 font-semibold text-slate-800">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
-            <FiEye className="text-white text-sm" />
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 font-semibold text-slate-800">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+              <FiEye className="text-white text-sm" />
+            </div>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+              Lifetime Earnings Chart
+            </span>
+          </h3>
+          <div className="relative">
+            <button
+              onMouseEnter={() => setShowInfoTooltip(true)}
+              onMouseLeave={() => setShowInfoTooltip(false)}
+              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors duration-200"
+            >
+              <FiInfo className="text-slate-500 text-sm" />
+            </button>
+            {showInfoTooltip && (
+                              <div className="absolute right-0 top-8 w-64 p-3 bg-white border border-slate-200 rounded-lg shadow-lg text-xs text-slate-600 z-50">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Shows total points earned from all activities.<br/>
+                  <span className="text-slate-500">Does not reflect current balance after redeeming rewards.</span>
+                </p>
+              </div>
+            )}
           </div>
-          <span className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-            Points by Category
-          </span>
-        </h3>
+        </div>
+
       </div>
 
       <div className="flex-1 p-6">
@@ -54,7 +75,7 @@ export const UsageRadar = () => {
             <div className="p-8 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-inner">
               <div className="text-6xl mb-4 opacity-50">📊</div>
               <p className="font-semibold text-slate-700 mb-2">No Activity Data</p>
-              <p className="text-sm text-slate-500">Complete activities to see your points distribution</p>
+              <p className="text-sm text-slate-500">Complete activities to see your points distribution across categories</p>
             </div>
           </div>
         ) : (
@@ -92,25 +113,34 @@ export const UsageRadar = () => {
                       </filter>
                     </defs>
                     
-                    {/* Central Label - Total Points */}
-                    <text 
-                      x="100" 
-                      y="98" 
-                      textAnchor="middle" 
-                      className="fill-slate-700 font-bold"
-                      fontSize="12"
-                    >
-                      {enrichedCategoryData.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
-                    </text>
-                    <text 
-                      x="100" 
-                      y="108" 
-                      textAnchor="middle" 
-                      className="fill-slate-500 font-medium"
-                      fontSize="7"
-                    >
-                      Total Points
-                    </text>
+                                          {/* Central Label - Total Points Earned */}
+                      <text 
+                        x="100" 
+                        y="96" 
+                        textAnchor="middle" 
+                        className="fill-slate-700 font-bold"
+                        fontSize="13"
+                      >
+                        {enrichedCategoryData.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
+                      </text>
+                      <text 
+                        x="100" 
+                        y="107" 
+                        textAnchor="middle" 
+                        className="fill-slate-500 font-medium"
+                        fontSize="6"
+                      >
+                        Total Points
+                      </text>
+                      <text 
+                        x="100" 
+                        y="114" 
+                        textAnchor="middle" 
+                        className="fill-slate-400 font-medium"
+                        fontSize="5"
+                      >
+                        (All Time)
+                      </text>
                     
                     {/* Render pie segments */}
                     {(() => {
@@ -281,7 +311,7 @@ export const UsageRadar = () => {
                               <span className="font-semibold text-slate-800 text-lg">{percentage}%</span>
                             </div>
                             <div className="flex justify-between items-center pt-2 border-t border-slate-200/40">
-                              <span className="text-base text-slate-700 mr-6">Of Total:</span>
+                              <span className="text-base text-slate-700 mr-6">Of Total Earned:</span>
                               <span className="font-semibold text-slate-800 text-lg">{total.toLocaleString()}</span>
                             </div>
                           </div>
@@ -290,7 +320,7 @@ export const UsageRadar = () => {
                       
                       {/* Activity Suggestions */}
                       <div className="border-t border-slate-200/40 pt-4">
-                        <p className="text-sm font-semibold text-slate-700 mb-3">💡 Increase {entry.name} points by:</p>
+                        <p className="text-sm font-semibold text-slate-700 mb-3">💡 Earn more {entry.name} points by:</p>
                         <ul className="space-y-2">
                           {activitySuggestions.map((suggestion, idx) => (
                             <li key={idx} className="text-sm text-slate-600 flex items-start">

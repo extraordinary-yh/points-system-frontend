@@ -7,6 +7,12 @@ import { PointsLog } from "../../services/api";
 export const RecentTransactions = () => {
   const { recentActivity, isLoading, error } = useSharedDashboardData();
 
+  // Debug: Log only on first load (reduced for performance)
+  if (recentActivity && recentActivity.length > 0 && !(window as any).debugLogged) {
+    console.log('🔍 Recent Activity Data Sample:', recentActivity[0]);
+    (window as any).debugLogged = true;
+  }
+
   // Show skeleton loader while loading
   if (isLoading) {
     return <RecentTransactionsSkeleton />;
@@ -51,15 +57,32 @@ export const RecentTransactions = () => {
             <table className="w-full table-auto">
               <TableHead />
               <tbody>
-                {recentActivity.map((activity, index) => (
-                  <TableRow 
-                    key={activity.id}
-                    activity={activity.activity.name}
-                    points={`+${activity.points_earned}`}
-                    date={formatDate(activity.timestamp)}
-                    order={index + 1}
-                  />
-                ))}
+                {recentActivity.map((activity, index) => {
+                  // Try multiple possible data structures
+                  // Removed individual logging for performance
+                  
+                  const activityName = activity.activity?.name || 
+                                     (activity as any).name || 
+                                     activity.details || 
+                                     `Activity ${activity.id}` || 
+                                     'Unknown Activity';
+                  
+                  const activityCategory = activity.activity?.category || 
+                                         (activity as any).category || 
+                                         (activity as any).activity_category ||
+                                         'Other';
+                  
+                  return (
+                    <TableRow 
+                      key={activity.id}
+                      activity={activityName}
+                      points={`+${activity.points_earned}`}
+                      date={formatDate(activity.timestamp)}
+                      category={activityCategory}
+                      order={index + 1}
+                    />
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -76,7 +99,7 @@ const TableHead = () => {
         <th className="text-start p-4 border-b border-slate-200/50">Activity</th>
         <th className="text-start p-4 border-b border-slate-200/50">Date</th>
         <th className="text-start p-4 border-b border-slate-200/50">Points</th>
-        <th className="w-12 border-b border-slate-200/50"></th>
+        <th className="text-start p-4 border-b border-slate-200/50">Category</th>
       </tr>
     </thead>
   );
@@ -86,25 +109,49 @@ const TableRow = ({
   activity,
   points,
   date,
+  category,
   order,
 }: {
   activity: string;
   date: string;
   points: string;
+  category: string;
   order: number;
 }) => {
+  // Removed debug logging for performance
+
+  // Helper function to get category color and icon - using consistent colors from shared hook
+  const getCategoryStyle = (cat: string) => {
+    const categoryLower = cat.toLowerCase();
+    switch (categoryLower) {
+      case 'engagement':
+        return { color: 'text-violet-600', bg: 'bg-violet-100', icon: '🎯' };
+      case 'events':
+        return { color: 'text-indigo-600', bg: 'bg-indigo-100', icon: '📅' };
+      case 'content':
+        return { color: 'text-sky-600', bg: 'bg-sky-100', icon: '📝' };
+      case 'professional':
+        return { color: 'text-emerald-600', bg: 'bg-emerald-100', icon: '💼' };
+      case 'social':
+        return { color: 'text-blue-600', bg: 'bg-blue-100', icon: '👥' };
+      case 'learning':
+        return { color: 'text-violet-600', bg: 'bg-violet-100', icon: '📚' };
+      default:
+        return { color: 'text-gray-600', bg: 'bg-gray-100', icon: '📋' };
+    }
+  };
+
+  const categoryStyle = getCategoryStyle(category);
+
   return (
     <tr className={`text-sm transition-all duration-200 hover:bg-slate-50/50 ${order % 2 ? "bg-slate-50/30" : ""}`}>
       <td className="p-4 border-b border-slate-100/50">
-        <a
-          href="#"
-          className="text-violet-600 hover:text-violet-700 font-medium flex items-center gap-2 transition-colors duration-200"
-        >
+        <div className="text-slate-800 font-medium flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-100 to-purple-100 text-violet-600">
             <FiArrowUpRight className="text-xs" />
           </div>
-          {activity}
-        </a>
+          <span className="truncate">{activity}</span>
+        </div>
       </td>
       <td className="p-4 border-b border-slate-100/50 text-slate-600 font-medium">{date}</td>
       <td className="p-4 border-b border-slate-100/50">
@@ -112,10 +159,13 @@ const TableRow = ({
           {points}
         </span>
       </td>
-      <td className="w-12 p-4 border-b border-slate-100/50">
-        <button className="hover:bg-slate-200/50 transition-all duration-200 grid place-content-center rounded-lg text-slate-400 hover:text-slate-600 size-8">
-          <FiMoreHorizontal className="text-sm" />
-        </button>
+      <td className="p-4 border-b border-slate-100/50">
+        <div className="flex items-center gap-1">
+          <span className="text-xs">{categoryStyle.icon}</span>
+          <span className={`text-xs font-medium capitalize ${categoryStyle.color} ${categoryStyle.bg} px-2 py-1 rounded-full`}>
+            {category}
+          </span>
+        </div>
       </td>
     </tr>
   );

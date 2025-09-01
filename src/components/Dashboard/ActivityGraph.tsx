@@ -50,23 +50,23 @@ export const ActivityGraph = () => {
 
       <div className="flex-1 p-6">
         {!timelineData || chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-full min-h-[280px] text-center">
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-inner">
-              <div className="text-5xl mb-4 opacity-50">📊</div>
+          <div className="flex items-center justify-center h-full min-h-[200px] text-center">
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-inner">
+              <div className="text-4xl mb-3 opacity-50">📊</div>
               <p className="font-semibold text-slate-700 mb-2">No Timeline Data</p>
               <p className="text-sm text-slate-500">Complete activities to see your points progress over time</p>
             </div>
           </div>
         ) : (
-          <div className="w-full h-80">
+          <div className="w-full h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={chartData}
                 margin={{
-                  top: 20,
-                  right: 20,
-                  left: 0,
-                  bottom: 20,
+                  top: 10,
+                  right: 10,
+                  left: 10,
+                  bottom: 10,
                 }}
               >
                 <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" />
@@ -75,13 +75,19 @@ export const ActivityGraph = () => {
                   axisLine={false}
                   tickLine={false}
                   className="text-xs font-medium text-slate-600"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 10 }}
+                  height={40}
+                  interval="preserveStartEnd"
+                  minTickGap={30}
                 />
                 <YAxis 
                   className="text-xs font-medium text-slate-600" 
                   axisLine={false} 
                   tickLine={false}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 10 }}
+                  width={40}
+                  domain={['dataMin - 10', 'dataMax + 10']}
+                  allowDataOverflow={false}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
