@@ -20,7 +20,16 @@ export const LoginForm = ({ onSwitchToRegister }: { onSwitchToRegister: () => vo
       });
 
       if (result?.error) {
-        setError('Invalid credentials');
+        // Handle specific error messages from NextAuth
+        if (result.error === 'CredentialsSignin') {
+          setError('Invalid username or password');
+        } else if (result.error.includes('Invalid username or password')) {
+          setError('Invalid username or password');
+        } else if (result.error.includes('Account is suspended')) {
+          setError('Account is suspended or restricted');
+        } else {
+          setError(result.error || 'Authentication failed');
+        }
       }
       // If successful, NextAuth will handle the session
     } catch (error) {

@@ -20,6 +20,9 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   forceLogout: () => void;
+  showReLoginPrompt: boolean;
+  handleReLogin: () => void;
+  dismissReLoginPrompt: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +38,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReLoginPrompt, setShowReLoginPrompt] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -67,6 +71,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     initAuth();
+
+    // Listen for unauthorized errors from API service
+    const handleUnauthorizedError = (event: CustomEvent) => {
+      console.log('🚨 Unauthorized error received, showing re-login prompt');
+      setShowReLoginPrompt(true);
+      setUser(null);
+    };
+
+    window.addEventListener('unauthorized-error', handleUnauthorizedError as EventListener);
+
+    return () => {
+      window.removeEventListener('unauthorized-error', handleUnauthorizedError as EventListener);
+    };
   }, []);
 
   const login = async (credentials: { username: string; password: string }) => {
@@ -133,6 +150,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setTimeout(() => window.location.reload(), 100);
   };
 
+  const handleReLogin = () => {
+    setShowReLoginPrompt(false);
+    // Redirect to login page
+    window.location.href = '/auth';
+  };
+
+  const dismissReLoginPrompt = () => {
+    setShowReLoginPrompt(false);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -141,7 +168,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout, 
       loading, 
       isAuthenticated: !!user,
-      forceLogout
+      forceLogout,
+      showReLoginPrompt,
+      handleReLogin,
+      dismissReLoginPrompt
     }}>
       {children}
     </AuthContext.Provider>
