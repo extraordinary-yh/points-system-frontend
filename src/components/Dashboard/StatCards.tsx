@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FiTrendingDown, FiTrendingUp } from "react-icons/fi";
 import { useSession } from "next-auth/react";
-import { apiService, DashboardStats } from "../../services/api";
+import { DashboardStats } from "../../services/api";
+import { useSharedDashboardData } from "../../hooks/useSharedDashboardData";
 
 // Global refresh function for StatCards
 let globalStatCardsRefresh: (() => Promise<void>) | null = null;
@@ -19,85 +20,118 @@ export const refreshStatCards = async () => {
 
 export const StatCards = () => {
   const { data: session, status } = useSession();
+  const { 
+    totalPoints, 
+    totalActivities, 
+    dashboardStats, 
+    availableRewards,
+    isLoading: sharedDataLoading 
+  } = useSharedDashboardData();
+  
+  // ✅ Data Priority (FIXED - activity feed is more current):
+  // 1. totalPoints (calculated from activity feed - most current, 101 points)
+  // 2. dashboardStats.current_period.total_points (backend API - may be outdated, 96 points)
+  // ❌ NO session.user.total_points - creates confusion and outdated data
+  //
+  // 💡 To ensure fallback data is updated, call refreshDashboardData() from external components
+  // or use the global refresh function: window.forceDashboardRefresh()
   const [stats, setStats] = useState({
     totalPoints: 0,
     activitiesCompleted: 0,
     availableRewards: 0,
     loading: true
   });
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
 
-  const fetchStats = async () => {
-      try {
-        // Get user points from session as fallback
-        let userPoints = session?.user?.total_points || 0;
-        
-        // Only fetch additional stats if user is properly authenticated
-        let activitiesCount = 0;
-        let availableIncentives = 0;
-
-        if (status === "authenticated" && session?.djangoAccessToken) {
-          try {
-            // Fetch dashboard stats and rewards in parallel for better performance
-            const [dashboardResponse, rewardsResponse] = await Promise.all([
-              apiService.getDashboardStats('30days', session.djangoAccessToken),
-              apiService.getAvailableRewards(session.djangoAccessToken)
-            ]);
-
-            // Handle dashboard stats
-            if (dashboardResponse.data) {
-              setDashboardStats(dashboardResponse.data);
-              activitiesCount = dashboardResponse.data.current_period.activities_completed;
-              userPoints = dashboardResponse.data.current_period.total_points;
-            }
-
-            // Handle rewards response
-            if (rewardsResponse.data) {
-              let rewardsArray: any[] = [];
-              if (Array.isArray(rewardsResponse.data)) {
-                rewardsArray = rewardsResponse.data;
-              } else if ((rewardsResponse.data as any).rewards) {
-                rewardsArray = (rewardsResponse.data as any).rewards;
-              }
-              
-              // Count ready-to-redeem rewards
-              availableIncentives = rewardsArray.filter(reward => {
-                const canAfford = userPoints >= reward.points_required;
-                const canRedeem = reward.can_redeem;
-                const inStock = reward.stock_available === undefined || reward.stock_available > 0;
-                return canAfford && canRedeem && inStock;
-              }).length;
-            }
-
-          } catch (error) {
-            console.warn('Failed to fetch stats:', error);
-            // Fallback to session data only
-            activitiesCount = 0;
-            availableIncentives = 0;
-          }
+  const updateStats = async () => {
+    try {
+      // ✅ FIX: Use activity feed calculation as primary source (most current)
+      // Activity feed calculation is showing correct 101 points vs dashboard stats 96 points
+      let userPoints = 0;
+      
+      if (totalPoints !== undefined && totalPoints > 0) {
+        // Use activity feed calculation as primary source (most current)
+        userPoints = totalPoints;
+        // Reduced logging for performance
+        if (Math.random() < 0.05) {
+          console.log('📊 StatCards: Using activity feed total points (current):', userPoints);
         }
+      } else if (dashboardStats?.current_period?.total_points !== undefined) {
+        // Fallback: dashboard stats (may be outdated)
+        userPoints = dashboardStats.current_period.total_points;
+        // Reduced logging for performance
+        if (Math.random() < 0.05) {
+          console.log('📊 StatCards: Using dashboard stats total points (fallback):', userPoints);
+        }
+      } else {
+        userPoints = 0;
+        // Reduced logging for performance
+        if (Math.random() < 0.05) {
+          console.log('📊 StatCards: No point data available');
+        }
+      }
 
-        setStats({
-          totalPoints: userPoints,
-          activitiesCompleted: activitiesCount,
-          availableRewards: availableIncentives,
-          loading: false
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-        // Still show user points even if other stats fail
-        setStats({
-          totalPoints: session?.user?.total_points || 0,
-          activitiesCompleted: 0,
-          availableRewards: 0,
-          loading: false
+      let activitiesCount = 0;
+      
+      if (dashboardStats?.current_period?.activities_completed !== undefined) {
+        // Use dashboard stats for activities completed
+        activitiesCount = dashboardStats.current_period.activities_completed;
+        // Reduced logging for performance
+        if (Math.random() < 0.05) {
+          console.log('📊 Using dashboard stats activities completed:', activitiesCount);
+        }
+      } else {
+        // Fallback: calculated total from activity feed
+        // This fallback gets updated when refreshDashboardData() is called
+        activitiesCount = totalActivities || 0;
+        // Reduced logging for performance
+        if (Math.random() < 0.05) {
+          console.log('📊 Using calculated activities from activity feed (fallback):', activitiesCount);
+          console.log('⚠️ Fallback data used - consider calling refreshDashboardData() to update');
+        }
+      }
+
+      let availableIncentives = 0;
+
+      // Calculate available rewards from shared data
+      if (availableRewards && Array.isArray(availableRewards)) {
+        availableIncentives = availableRewards.filter(reward => {
+          const canAfford = userPoints >= reward.points_required;
+          const canRedeem = reward.can_redeem;
+          const inStock = reward.stock_available === undefined || reward.stock_available > 0;
+          return canAfford && canRedeem && inStock;
+        }).length;
+      }
+
+      setStats({
+        totalPoints: userPoints,
+        activitiesCompleted: activitiesCount,
+        availableRewards: availableIncentives,
+        loading: sharedDataLoading
+      });
+      
+      // Reduced logging for performance
+      if (Math.random() < 0.05) {
+        console.log('📊 StatCards updated:', { 
+          userPoints, 
+          activitiesCount, 
+          availableIncentives,
+          dataSource: dashboardStats?.current_period?.total_points !== undefined ? 'dashboard_stats_api' : 'activity_feed_calculated_fallback'
         });
       }
-    };
+    } catch (error) {
+      console.error('Error updating stats:', error);
+      setStats({
+        totalPoints: dashboardStats?.current_period?.total_points || totalPoints || 0,
+        activitiesCompleted: dashboardStats?.current_period?.activities_completed || totalActivities || 0,
+        availableRewards: 0,
+        loading: false
+      });
+    }
+  };
 
   useEffect(() => {
     if (session?.user) {
-      fetchStats();
+      updateStats();
     } else {
       setStats({
         totalPoints: 0,
@@ -106,18 +140,27 @@ export const StatCards = () => {
         loading: false
       });
     }
-  }, [session, status]);
+  }, [session, status, totalPoints, totalActivities, dashboardStats, availableRewards, sharedDataLoading]); // Use shared data dependencies
 
-  // Set up global refresh function
+  // Force immediate refresh when component first mounts
   useEffect(() => {
-    globalStatCardsRefresh = fetchStats;
+    if (session?.djangoAccessToken) {
+      import('../../hooks/useSharedDashboardData').then(({ refreshDashboardData }) => {
+        refreshDashboardData(true);
+      });
+    }
+  }, []); // Only run once on mount
+
+  // Set up global refresh function (now just updates from shared data)
+  useEffect(() => {
+    globalStatCardsRefresh = updateStats;
     
     return () => {
-      if (globalStatCardsRefresh === fetchStats) {
+      if (globalStatCardsRefresh === updateStats) {
         globalStatCardsRefresh = null;
       }
     };
-  }, [session, status]);
+  }, [updateStats]);
 
   if (stats.loading) {
     return (
@@ -134,14 +177,14 @@ export const StatCards = () => {
       <Card
         title="Current Points"
         value={stats.totalPoints.toString()}
-        period={`Earned last 30 days: ${dashboardStats?.current_period.points_earned || 0} points`}
-        trend={dashboardStats?.trends.total_points}
+        period={`Earned last 30 days: ${dashboardStats?.current_period?.points_earned || 0} points`}
+        trend={dashboardStats?.trends?.total_points}
       />
       <Card
         title="Activities Completed"
         value={stats.activitiesCompleted.toString()}
         period="Last 30 Days"
-        trend={dashboardStats?.trends.activities_completed}
+        trend={dashboardStats?.trends?.activities_completed}
       />
       <Card
         title="Available Rewards"

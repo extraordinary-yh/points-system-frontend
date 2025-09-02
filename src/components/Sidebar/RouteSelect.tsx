@@ -67,11 +67,11 @@ const Route = ({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 rounded-lg transition-[box-shadow,_background-color,_color] ${
-        isCollapsed 
-          ? "w-10 h-10 justify-center" 
-          : "w-full px-3 py-2 justify-start"
-      } ${
+              className={`flex items-center gap-3 rounded-lg transition-[box-shadow,_background-color,_color] ${
+          isCollapsed 
+            ? "w-10 h-10 justify-center" 
+            : "w-full h-10 px-3 justify-start"
+        } ${
         selected
           ? "bg-white text-stone-950 shadow"
           : "hover:bg-gray-50 text-stone-500 shadow-none"

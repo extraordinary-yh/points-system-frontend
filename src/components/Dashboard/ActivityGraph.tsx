@@ -16,7 +16,7 @@ import {
 } from "recharts";
 
 export const ActivityGraph = () => {
-  const { timelineData, isLoading, error } = useSharedDashboardData();
+  const { timelineData, totalPoints, isLoading, error } = useSharedDashboardData();
 
   // Show skeleton loader while loading
   if (isLoading) {
@@ -28,11 +28,53 @@ export const ActivityGraph = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const chartData = timelineData?.timeline.map(item => ({
-    name: formatDate(item.date),
-    Points: item.cumulative_points,
-    Daily: item.points_earned,
-  })) || [];
+  // ✅ Calculate chart data with correct cumulative progression
+  const chartData = (() => {
+    if (!timelineData?.timeline.length) return [];
+    
+    const timeline = timelineData.timeline;
+    const correctTotalPoints = totalPoints || 0;
+    
+    // Sort timeline by date to ensure proper progression
+    const sortedTimeline = [...timeline].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Calculate proper cumulative progression
+    let runningTotal = 0;
+    const chartDataWithProgression = sortedTimeline.map((item, index) => {
+      // Add daily net points to running total
+      const dailyNet = (item.points_earned || 0) - (item.points_redeemed || 0);
+      runningTotal += dailyNet;
+      
+      return {
+        name: formatDate(item.date),
+        Points: runningTotal, // Use calculated running total
+        Daily: item.points_earned || 0,
+        Redeemed: item.points_redeemed || 0,
+        Net: dailyNet,
+        Redemptions: item.redemptions_count || 0
+      };
+    });
+    
+    // Adjust final total to match the correct total points from activity feed
+    const calculatedFinal = chartDataWithProgression[chartDataWithProgression.length - 1]?.Points || 0;
+    const adjustment = correctTotalPoints - calculatedFinal;
+    
+    // Apply adjustment to all points if needed
+    if (Math.abs(adjustment) > 0) {
+      chartDataWithProgression.forEach(item => {
+        item.Points += adjustment;
+      });
+      
+      console.log('📊 ActivityGraph: Adjusted chart data to match total points:', {
+        correctTotalPoints,
+        calculatedFinal,
+        adjustment,
+        finalDisplayTotal: chartDataWithProgression[chartDataWithProgression.length - 1]?.Points
+      });
+    }
+    
+    return chartDataWithProgression;
+  })();
 
   return (
     <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col">
@@ -92,12 +134,22 @@ export const ActivityGraph = () => {
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
+                      const data = payload[0]?.payload;
                       return (
                         <div className="bg-white/95 backdrop-blur-sm p-3 border border-slate-200 rounded-xl shadow-xl">
                           <p className="text-xs text-slate-600 mb-2 font-medium">{label}</p>
-                          <p className="text-violet-600 font-semibold">Total: {payload[0]?.value} points</p>
-                          {payload[1] && (
-                            <p className="text-emerald-600 text-sm font-medium">Daily: +{payload[1]?.value} points</p>
+                          <p className="text-violet-600 font-semibold">Total: {data?.Points} points</p>
+                          {data?.Daily > 0 && (
+                            <p className="text-emerald-600 text-sm font-medium">Earned: +{data.Daily} points</p>
+                          )}
+                          {data?.Redeemed > 0 && (
+                            <p className="text-red-500 text-sm font-medium">Redeemed: -{data.Redeemed} points</p>
+                          )}
+                          {data?.Net !== data?.Daily && (
+                            <p className="text-slate-700 text-sm font-medium">Net: {data?.Net > 0 ? '+' : ''}{data?.Net} points</p>
+                          )}
+                          {data?.Redemptions > 0 && (
+                            <p className="text-xs text-slate-500">🎁 {data.Redemptions} redemption{data.Redemptions > 1 ? 's' : ''}</p>
                           )}
                         </div>
                       );

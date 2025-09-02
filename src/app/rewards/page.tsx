@@ -1,78 +1,30 @@
 'use client';
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
 import { apiService, User, Incentive, Redemption } from "@/services/api";
+import { useOnboardingCheck } from "@/hooks/useOnboardingCheck";
 import { refreshDashboardData } from "@/hooks/useSharedDashboardData";
 import { refreshStatCards } from "@/components/Dashboard/StatCards";
 import { Lock, Check, Gift, Trophy, Star, Heart, Zap, Award } from "lucide-react";
 
 export default function RewardsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
-  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const { data: session } = useSession();
+  const { userProfile, isLoading } = useOnboardingCheck();
   const { isCollapsed } = useSidebar();
 
-  useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      if (status === "loading") return;
-      if (status === "unauthenticated" || !session?.user) {
-        router.push("/");
-        return;
-      }
-
-      if (session?.djangoAccessToken && isCheckingOnboarding) {
-        try {
-          const response = await apiService.getProfile(session.djangoAccessToken);
-          
-          // Check for network errors first
-          if (response.isNetworkError) {
-            setUserProfile({ onboarding_completed: true } as User);
-            return;
-          }
-          
-          if (response.data) {
-            setUserProfile(response.data);
-            
-            if (!response.data.onboarding_completed) {
-              router.push("/onboarding");
-              return;
-            }
-          } else {
-            // If no profile data but user is authenticated, assume onboarding complete
-            // Set a default profile state to prevent redirect loops
-            setUserProfile({ onboarding_completed: true } as User);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user profile:', error);
-          // For any error, assume onboarding complete for authenticated user
-          setUserProfile({ onboarding_completed: true } as User);
-        } finally {
-          setIsCheckingOnboarding(false);
-        }
-      }
-    };
-
-    checkOnboardingStatus();
-  }, [session, status, router, isCheckingOnboarding]);
-
-  if (status === "loading" || isCheckingOnboarding) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-100">
         <div className="text-xl text-stone-600">
-          {status === "loading" ? "Loading..." : "Checking account setup..."}
+          Loading rewards...
         </div>
       </div>
     );
   }
 
-  if (status === "unauthenticated" || !session?.user) {
-    return null;
-  }
-
+  // useOnboardingCheck handles authentication and onboarding redirects
   if (!userProfile?.onboarding_completed) {
     return null;
   }
@@ -93,6 +45,7 @@ const RewardsContent = () => {
   const { data: session } = useSession();
   const [rewards, setRewards] = useState<Incentive[]>([]);
   const [redemptionHistory, setRedemptionHistory] = useState<Redemption[]>([]);
+  const [currentUserPoints, setCurrentUserPoints] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'available' | 'history'>('available');
   const [redeeming, setRedeeming] = useState<number | null>(null);
@@ -101,6 +54,13 @@ const RewardsContent = () => {
     const fetchRewardsData = async () => {
       if (session?.djangoAccessToken) {
         try {
+          // Fetch fresh user profile to get current points (single source of truth)
+          const userProfileResponse = await apiService.getProfile(session.djangoAccessToken);
+          if (userProfileResponse.data?.total_points !== undefined) {
+            setCurrentUserPoints(userProfileResponse.data.total_points);
+            console.log('✅ Fresh user points loaded:', userProfileResponse.data.total_points);
+          }
+
           // Try new API first
           let rewardsResponse;
           try {
@@ -186,10 +146,17 @@ const RewardsContent = () => {
         await refreshStatCards();
         
         // Refresh data after successful redemption
-        const [rewardsResponse, historyResponse] = await Promise.all([
+        const [userProfileResponse, rewardsResponse, historyResponse] = await Promise.all([
+          apiService.getProfile(session.djangoAccessToken), // Fresh user points
           apiService.getAvailableRewards(session.djangoAccessToken),
           apiService.getRedemptionHistory(session.djangoAccessToken)
         ]);
+
+        // Update current user points from fresh API data
+        if (userProfileResponse.data?.total_points !== undefined) {
+          setCurrentUserPoints(userProfileResponse.data.total_points);
+          console.log('✅ Updated user points after redemption:', userProfileResponse.data.total_points);
+        }
         
         // Handle object structure for refreshed data too
         if (rewardsResponse.data) {
@@ -217,7 +184,7 @@ const RewardsContent = () => {
     }
   };
 
-  const userPoints = session?.user?.total_points || 0;
+  const userPoints = currentUserPoints;
   const maxRewardPoints = Math.max(...rewards.map(r => r.points_required), 1000);
 
   // Get locked rewards for milestones (show all rewards user can't afford yet, regardless of can_redeem status)
@@ -407,7 +374,7 @@ const RewardsContent = () => {
         ) : activeTab === 'available' ? (
           <AvailableRewards 
             rewards={rewards} 
-            userPoints={session?.user?.total_points || 0}
+            userPoints={currentUserPoints}
             onRedeem={handleRedeem}
             redeeming={redeeming}
           />

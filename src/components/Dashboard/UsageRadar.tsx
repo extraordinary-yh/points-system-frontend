@@ -27,6 +27,8 @@ export const UsageRadar = () => {
   const [hoveredSegment, setHoveredSegment] = useState<number | null>(null);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
 
+  // Debug removed - using central debugging in useSharedDashboardData hook
+
   // Show skeleton loader while loading
   if (isLoading) {
     return <UsageRadarSkeleton />;
