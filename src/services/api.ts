@@ -303,6 +303,8 @@ class ApiService {
       const response = await fetch(url, {
         ...options,
         headers,
+        // Include credentials for CORS compatibility with backend
+        credentials: 'include',
         // Ensure no caching at the fetch level
         cache: 'no-store',
       });
