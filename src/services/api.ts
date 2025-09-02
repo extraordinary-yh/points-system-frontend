@@ -3,6 +3,9 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
+// Import performance profiler (will be enabled when utils are available)
+// import { PerformanceProfiler, NetworkAnalyzer } from '../utils/performanceProfiler';
+
 // Types based on Django backend models
 export interface User {
   id: number;
@@ -63,10 +66,23 @@ export interface Incentive {
 
 export interface Redemption {
   id: number;
-  user: User;
-  incentive: Incentive;
+  user?: User;
+  // The actual API returns 'reward' not 'incentive'
+  reward?: {
+    name: string;
+    description?: string;
+    image_url?: string;
+    points_required?: number;
+  };
+  // Keep incentive for backwards compatibility
+  incentive?: Incentive;
   status: 'pending' | 'approved' | 'shipped' | 'delivered' | 'rejected';
-  redemption_date: string;
+  // The actual API returns 'redeemed_at' not 'redemption_date'
+  redeemed_at?: string;
+  // Keep redemption_date for backwards compatibility
+  redemption_date?: string;
+  // The actual API returns 'points_spent'
+  points_spent?: number;
   admin_notes?: string;
   // New fields from backend
   delivery_details?: any;
@@ -135,8 +151,11 @@ export interface TimelineData {
   timeline: {
     date: string;
     points_earned: number;
+    points_redeemed?: number;  // NEW: From Phase 1 backend
+    net_points?: number;       // NEW: From Phase 1 backend
     cumulative_points: number;
     activities_count: number;
+    redemptions_count?: number; // NEW: From Phase 1 backend
   }[];
   summary: {
     total_days: number;
@@ -144,6 +163,31 @@ export interface TimelineData {
     average_daily_points: number;
     most_active_date: string;
   };
+}
+
+// NEW: Unified Activity Feed Types (Phase 1)
+export interface ActivityFeedItem {
+  id: string;
+  type: 'activity' | 'redemption';
+  timestamp: string;
+  points_change: number;
+  description: string;
+  category?: string;
+  activity_name?: string;
+  reward_name?: string;
+  details?: {
+    activity_category?: string;
+    [key: string]: any;
+  };
+}
+
+export interface ActivityFeed {
+  feed: ActivityFeedItem[];
+  total_items: number;
+  is_lifetime_data: boolean;
+  limit_applied: number | null;
+  total_activities: number;
+  total_redemptions: number;
 }
 
 export interface LeaderboardEntry {
@@ -183,6 +227,7 @@ export interface UserPreferences {
 
 class ApiService {
   private token: string | null = null;
+  private requestCache: Map<string, Promise<any>> = new Map();
 
   constructor() {
     // Load token from localStorage on initialization
@@ -203,13 +248,23 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Use override token if provided, otherwise use instance token
+    const activeToken = overrideToken !== undefined ? overrideToken : this.token;
+    
+    // Create a cache key for request deduplication (include method and token)
+    const method = options.method || 'GET';
+    const cacheKey = `${method}:${endpoint}:${activeToken ? 'auth' : 'noauth'}:${options.body ? JSON.stringify(options.body) : ''}`;
+    
+    // Check if this exact request is already in progress
+    if (this.requestCache.has(cacheKey)) {
+      console.log(`🔄 Deduplicating request: ${endpoint}`);
+      return this.requestCache.get(cacheKey);
+    }
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
-
-    // Use override token if provided, otherwise use instance token
-    const activeToken = overrideToken !== undefined ? overrideToken : this.token;
     
     if (activeToken) {
       headers['Authorization'] = `Bearer ${activeToken}`;
@@ -217,13 +272,51 @@ class ApiService {
       console.warn('⚠️  No auth token - request may be unauthorized:', url);
     }
 
+    // Create the actual request promise
+    const requestPromise = this.executeRequest<T>(url, endpoint, options, headers);
+    
+    // Cache the promise (only for GET requests to avoid caching mutations)
+    if (method === 'GET') {
+      this.requestCache.set(cacheKey, requestPromise);
+      
+      // Clean up cache after request completes (success or failure)
+      requestPromise.finally(() => {
+        this.requestCache.delete(cacheKey);
+      });
+    }
+    
+    return requestPromise;
+  }
+
+  private async executeRequest<T>(
+    url: string,
+    endpoint: string,
+    options: RequestInit,
+    headers: Record<string, string>
+  ): Promise<ApiResponse<T>> {
+    // Performance profiling with unique timer names to avoid conflicts
+    const timerId = `API: ${endpoint}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     try {
+      console.time(timerId);
+      
       const response = await fetch(url, {
         ...options,
         headers,
+        // Ensure no caching at the fetch level
+        cache: 'no-store',
       });
 
+      console.timeEnd(timerId);
+      
       const data = await response.json();
+      
+      // Reduced logging - only log occasionally
+      if (Math.random() < 0.1) { // Only log 10% of requests
+        const size = new Blob([JSON.stringify(data)]).size;
+        const sizeKB = (size / 1024).toFixed(2);
+        console.log(`📦 ${endpoint}: ${sizeKB}KB, ${Array.isArray(data) ? data.length : 'non-array'} items`);
+      }
 
       if (!response.ok) {
         return {
@@ -234,6 +327,7 @@ class ApiService {
 
       return { data };
     } catch (error) {
+      console.timeEnd(timerId);
       // Network error (backend unreachable, connection refused, etc.)
       return {
         error: error instanceof Error ? error.message : 'Network error',
@@ -488,6 +582,38 @@ class ApiService {
 
   async getActivityPreferences(token?: string): Promise<ApiResponse<UserPreferences>> {
     return this.request<UserPreferences>('/user-preferences/activity-preferences/', {}, token);
+  }
+
+  // NEW: Unified Activity Feed API (Phase 1)
+  async getActivityFeed(limitOrToken?: number | string, tokenParam?: string): Promise<ApiResponse<ActivityFeed>> {
+    // Handle both function signatures:
+    // getActivityFeed(limit, token) - with limit
+    // getActivityFeed(token) - without limit (full lifetime)
+    
+    let limit: number | undefined;
+    let token: string | undefined;
+    
+    if (typeof limitOrToken === 'number') {
+      // First parameter is a limit number
+      limit = limitOrToken;
+      token = tokenParam;
+    } else {
+      // First parameter is a token string
+      limit = undefined;
+      token = limitOrToken;
+    }
+    
+    // If limit is provided, send limit parameter; otherwise get full lifetime data
+    const url = limit !== undefined && limit !== null 
+      ? `/activity/feed/?limit=${limit}` 
+      : `/activity/feed/`;
+    return this.request<ActivityFeed>(url, {}, token);
+  }
+
+  // Future: Lifetime stats summary endpoint (when backend implements it)  
+  async getLifetimeStats(token?: string): Promise<ApiResponse<any>> {
+    // This would be much faster than loading full history
+    return this.request<any>('/dashboard/lifetime-stats/', {}, token);
   }
 }
 

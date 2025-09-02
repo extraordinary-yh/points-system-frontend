@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:build": "docker build -t p2e-frontend .",
+    "docker:run": "docker run -p 3000:3000 p2e-frontend",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "cmdk": "^1.0.0",

@@ -17,25 +17,32 @@ export const Sidebar = () => {
         <div className="overflow-y-scroll h-full p-4 flex flex-col">
           {isCollapsed ? (
             /* Collapsed State - Show Expand Button */
-            <div className="flex flex-col items-center space-y-4 h-full">
-              <button
-                onClick={toggleSidebar}
-                className="w-10 h-10 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors duration-200"
-                title="Expand sidebar"
-              >
-                <PanelLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="flex-1">
+            <div className="flex flex-col items-center h-full">
+              {/* Top section - matches expanded mode spacing */}
+              <div className="flex justify-center items-center mb-4 h-10 w-full">
+                <button
+                  onClick={toggleSidebar}
+                  className="w-10 h-10 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors duration-200"
+                  title="Expand sidebar"
+                >
+                  <PanelLeft className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              
+              <div className="flex-1 w-full flex justify-center">
                 <RouteSelect />
               </div>
-              {/* Signout button at bottom */}
-              <button
-                onClick={() => signOut()}
-                className="w-10 h-10 hover:bg-red-100 rounded-lg flex items-center justify-center transition-colors duration-200 mt-auto"
-                title="Sign out"
-              >
-                <FiLogOut className="w-5 h-5 text-red-600" />
-              </button>
+              
+              {/* Bottom section - matches expanded mode */}
+              <div className="mt-2 flex justify-center">
+                <button
+                  onClick={() => signOut()}
+                  className="w-10 h-10 hover:bg-red-100 rounded-lg flex items-center justify-center transition-colors duration-200"
+                  title="Sign out"
+                >
+                  <FiLogOut className="w-5 h-5 text-red-600" />
+                </button>
+              </div>
             </div>
           ) : (
             /* Expanded State - Show Full Content */
