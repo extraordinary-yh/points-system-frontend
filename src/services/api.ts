@@ -321,6 +321,13 @@ class ApiService {
       }
 
       if (!response.ok) {
+        // Handle authentication-related errors
+        if (response.status === 401 || response.status === 403) {
+          console.warn(`🚨 ${response.status} Authentication error detected, triggering logout`);
+          // Trigger logout event for components to handle
+          this.handleUnauthorizedError();
+        }
+        
         return {
           error: data.error || data.detail || data || `HTTP ${response.status}`,
           statusCode: response.status,
@@ -336,6 +343,25 @@ class ApiService {
         isNetworkError: true,
       };
     }
+  }
+
+  // Handle 401 unauthorized errors by triggering logout
+  private handleUnauthorizedError(): void {
+    // Clear tokens immediately
+    this.logout();
+    
+    // Dispatch custom event for components to listen to
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('unauthorized-error', {
+        detail: { message: 'Your session has expired. Please log in again.' }
+      });
+      window.dispatchEvent(event);
+    }
+  }
+
+  // Public method to manually trigger unauthorized error handling (for testing)
+  triggerUnauthorizedError(): void {
+    this.handleUnauthorizedError();
   }
 
   // Authentication methods
@@ -430,6 +456,17 @@ class ApiService {
   refreshToken(): void {
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('authToken');
+    }
+  }
+
+  // Check if current token is still valid
+  async validateToken(token?: string): Promise<boolean> {
+    try {
+      const response = await this.request<{ valid: boolean }>('/users/profile/', {}, token);
+      return response.data !== undefined && !response.error;
+    } catch (error) {
+      console.warn('Token validation failed:', error);
+      return false;
     }
   }
 
