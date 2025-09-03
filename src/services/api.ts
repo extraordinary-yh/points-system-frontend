@@ -296,9 +296,11 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     // Performance profiling with unique timer names to avoid conflicts
     const timerId = `API: ${endpoint}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    let timerStarted = false;
     
     try {
       console.time(timerId);
+      timerStarted = true;
       
       const response = await fetch(url, {
         ...options,
@@ -309,7 +311,9 @@ class ApiService {
         cache: 'no-store',
       });
 
-      console.timeEnd(timerId);
+      if (timerStarted) {
+        console.timeEnd(timerId);
+      }
       
       const data = await response.json();
       
@@ -336,7 +340,10 @@ class ApiService {
 
       return { data };
     } catch (error) {
-      console.timeEnd(timerId);
+      // Only call console.timeEnd if the timer was actually started
+      if (timerStarted) {
+        console.timeEnd(timerId);
+      }
       // Network error (backend unreachable, connection refused, etc.)
       return {
         error: error instanceof Error ? error.message : 'Network error',
