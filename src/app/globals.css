@@ -97,3 +97,123 @@
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(34, 197, 94, 0.1);
 }
+
+/* Custom Colors for Leaderboard Glow Effects */
+@layer utilities {
+  .from-silver-200 {
+    --tw-gradient-from: #e5e7eb;
+    --tw-gradient-to: rgba(229, 231, 235, 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .from-silver-300 {
+    --tw-gradient-from: #d1d5db;
+    --tw-gradient-to: rgba(209, 213, 219, 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .via-silver-200 {
+    --tw-gradient-to: rgba(229, 231, 235, 0);
+    --tw-gradient-stops: var(--tw-gradient-via), var(--tw-gradient-to);
+    --tw-gradient-via: #e5e7eb;
+  }
+  
+  .ring-silver-300 {
+    --tw-ring-color: #d1d5db;
+  }
+  
+  .from-gold-300 {
+    --tw-gradient-from: #fcd34d;
+    --tw-gradient-to: rgba(252, 211, 77, 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .via-gold-400 {
+    --tw-gradient-to: rgba(251, 191, 36, 0);
+    --tw-gradient-stops: var(--tw-gradient-via), var(--tw-gradient-to);
+    --tw-gradient-via: #fbbf24;
+  }
+  
+  .ring-gold-400 {
+    --tw-ring-color: #fbbf24;
+  }
+}
+
+/* Enhanced Glow Effects for Leaderboard */
+@layer components {
+  .silver-glow {
+    box-shadow: 
+      0 0 20px rgba(209, 213, 219, 0.3),
+      0 0 40px rgba(209, 213, 219, 0.2),
+      0 0 60px rgba(209, 213, 219, 0.1);
+  }
+  
+  .bronze-glow {
+    box-shadow: 
+      0 0 15px rgba(217, 119, 6, 0.2),
+      0 0 30px rgba(217, 119, 6, 0.15),
+      0 0 45px rgba(217, 119, 6, 0.08);
+  }
+  
+  .gold-glow {
+    box-shadow: 
+      0 0 20px rgba(245, 158, 11, 0.4),
+      0 0 40px rgba(245, 158, 11, 0.3),
+      0 0 60px rgba(245, 158, 11, 0.2);
+  }
+  
+  .silver-glow-hover {
+    box-shadow: 
+      0 0 30px rgba(255, 255, 255, 0.9),
+      0 0 60px rgba(209, 213, 219, 0.7),
+      0 0 90px rgba(209, 213, 219, 0.5);
+  }
+  
+  .bronze-glow-hover {
+    box-shadow: 
+      0 0 25px rgba(255, 193, 7, 0.6),
+      0 0 50px rgba(217, 119, 6, 0.4),
+      0 0 75px rgba(217, 119, 6, 0.25);
+  }
+  
+  .gold-glow-hover {
+    box-shadow: 
+      0 0 30px rgba(255, 193, 7, 0.8),
+      0 0 60px rgba(245, 158, 11, 0.7),
+      0 0 90px rgba(217, 119, 6, 0.5);
+  }
+  
+  /* Current User Row Glow Effect */
+  .current-user-glow {
+    position: relative;
+  }
+  
+  .current-user-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 0 8px 8px 0;
+    pointer-events: none;
+  }
+  
+  .current-user-glow:hover::before {
+    opacity: 1;
+  }
+  
+  /* Pulsing animation for Your Position label */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.4);
+    }
+  }
+}

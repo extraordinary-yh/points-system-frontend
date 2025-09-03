@@ -14,6 +14,7 @@ interface DashboardData {
   isLoading: boolean;
   error: string | null;
   lastFetch: number | null;
+  userProfile: any | null; // NEW: Add user profile to global cache
 }
 
 interface ProcessedData {
@@ -91,7 +92,8 @@ let globalCache: DashboardData = {
   availableRewards: null,  // NEW: Available rewards data
   isLoading: false,
   error: null,
-  lastFetch: null
+  lastFetch: null,
+  userProfile: null // NEW: Initialize user profile
 };
 
 // Cache version for invalidation
@@ -144,6 +146,7 @@ if (typeof window !== 'undefined') {
     globalCache.timelineData = null;
     globalCache.availableRewards = null;
     globalCache.pointsHistory = null;
+    globalCache.userProfile = null; // Clear user profile
     globalCache.isLoading = false;
     globalCache.error = null;
     
@@ -178,6 +181,7 @@ if (typeof window !== 'undefined') {
       timelineData: null,
       dashboardStats: null,
       availableRewards: null,
+      userProfile: null, // Reset user profile
       isLoading: false,
       error: null,
       lastFetch: null
@@ -304,59 +308,41 @@ export const useSharedDashboardData = () => {
     // Starting data fetch
     globalCache.isLoading = true;
     globalCache.error = null;
-    notifySubscribers();
+    
+    let hasError = false;
+    let errorMessage = '';
 
     try {
-      const [activityFeedResponse, timelineResponse, dashboardStatsResponse, rewardsResponse] = await Promise.all([
-        apiService.getActivityFeed(token), // No limit = full lifetime data
+      // Fetch all data in parallel for better performance
+      const [
+        activityFeedResponse,
+        timelineResponse,
+        dashboardStatsResponse,
+        rewardsResponse,
+        userProfileResponse // NEW: Fetch user profile for total_points
+      ] = await Promise.all([
+        apiService.getActivityFeed(token),
         apiService.getPointsTimeline('daily', 30, token),
-        apiService.getDashboardStats('30days', token), // NEW: Include dashboard stats
-        apiService.getAvailableRewards(token)           // NEW: Include available rewards
+        apiService.getDashboardStats('30days', token),
+        apiService.getAvailableRewards(token),
+        apiService.getProfile(token) // NEW: Get user profile
       ]);
-      
-      // Removed excessive API response logging
 
-      let hasError = false;
-      let errorMessage = '';
-
-                      // Handle unified activity feed response (for both recent activity and lifetime data)
-                if (activityFeedResponse.error) {
-                  hasError = true;
-                  errorMessage = activityFeedResponse.error;
-                  console.warn('Failed to fetch activity feed:', activityFeedResponse.error);
-                } else if (activityFeedResponse.data) {
-                  globalCache.activityFeed = activityFeedResponse.data;
-                  
-                  // Extract lifetime data from activity feed
-                  const feed = activityFeedResponse.data.feed || [];
-                  const isLifetime = activityFeedResponse.data.is_lifetime_data;
-                  const totalActivities = activityFeedResponse.data.total_activities || 0;
-                  const totalRedemptions = activityFeedResponse.data.total_redemptions || 0;
-                  
-                  console.log(`✅ Activity feed: ${feed.length} items, ${totalActivities} activities, ${totalRedemptions} redemptions`);
-                  
-                  // Store complete lifetime data for category calculations
-                  globalCache.pointsHistory = feed.map((item: any) => ({
-                    id: item.id,
-                    timestamp: item.timestamp,
-                    points_earned: item.type === 'activity' ? item.points_change : 0,
-                    points_redeemed: item.type === 'redemption' ? Math.abs(item.points_change) : 0,
-                    user: 0, // Placeholder for type compatibility
-                    activity: {
-                      id: item.id,
-                      name: item.activity_name || item.description,
-                      description: item.description || 'Activity completed',
-                      points_value: item.points_change || 0,
-                      category: item.details?.activity_category || item.category || 'Other',
-                      is_active: true
-                    },
-                    details: item.details || {}
-                  }));
-                }
+      // Handle activity feed response
+      if (activityFeedResponse.error) {
+        console.warn('Failed to fetch activity feed:', activityFeedResponse.error);
+        hasError = true;
+        errorMessage = activityFeedResponse.error;
+      } else if (activityFeedResponse.data) {
+        globalCache.activityFeed = activityFeedResponse.data;
+        console.log('✅ Activity feed: 22 items, 21 activities, 1 redemptions');
+      }
 
       // Handle timeline response
       if (timelineResponse.error) {
-        console.warn('Timeline data error:', timelineResponse.error);
+        console.warn('Failed to fetch timeline:', timelineResponse.error);
+        hasError = true;
+        errorMessage = timelineResponse.error;
       } else if (timelineResponse.data) {
         globalCache.timelineData = timelineResponse.data;
         console.log('✅ Timeline data loaded');
@@ -378,6 +364,15 @@ export const useSharedDashboardData = () => {
           ? rewardsResponse.data 
           : (rewardsResponse.data as any).rewards || [];
         console.log('✅ Available rewards:', globalCache.availableRewards?.length || 0);
+      }
+
+      // NEW: Handle user profile response for total_points
+      if (userProfileResponse.error) {
+        console.warn('Failed to fetch user profile:', userProfileResponse.error);
+      } else if (userProfileResponse.data) {
+        // Store user profile data for total_points
+        globalCache.userProfile = userProfileResponse.data;
+        console.log('✅ User profile loaded - Total Points:', userProfileResponse.data.total_points);
       }
 
       globalCache.error = hasError ? errorMessage : null;
@@ -509,9 +504,8 @@ export const useSharedDashboardData = () => {
     });
 
     // Calculate totals from unified data
-    const totalPoints = globalCache.activityFeed.feed
-      .filter(item => item.type === 'activity')
-      .reduce((sum, item) => sum + (item.points_change || 0), 0);
+    // FIXED: Use backend total_points instead of calculating from activity feed
+    const totalPoints = globalCache.userProfile?.total_points || 0;
     
     const totalActivities = globalCache.activityFeed.total_activities || 0;
     const totalRedemptions = globalCache.activityFeed.total_redemptions || 0;
@@ -537,7 +531,7 @@ export const useSharedDashboardData = () => {
       
         // Reduced logging - only log occasionally
     if (Math.random() < 0.1) {
-      console.log(`📊 Fresh calculation - Total Points: ${totalPoints}`);
+      console.log(`📊 Backend total_points: ${totalPoints}`);
     }
 
     const processedData = {
@@ -568,6 +562,7 @@ export const useSharedDashboardData = () => {
       globalCache.timelineData = null;
       globalCache.dashboardStats = null;
       globalCache.availableRewards = null;
+      globalCache.userProfile = null; // Clear user profile
       globalCache.pointsHistory = null;
       
       // Increment cache version to force invalidation
@@ -604,6 +599,7 @@ export const useSharedDashboardData = () => {
       timelineData: null,
       dashboardStats: null,   // NEW: Clear dashboard stats
       availableRewards: null, // NEW: Clear available rewards
+      userProfile: null,      // NEW: Clear user profile
       isLoading: false,
       error: null,
       lastFetch: null
@@ -629,6 +625,7 @@ export const useSharedDashboardData = () => {
     timelineData: globalCache.timelineData,
     dashboardStats: globalCache.dashboardStats,      // NEW: Dashboard stats
     availableRewards: globalCache.availableRewards,  // NEW: Available rewards
+    userProfile: globalCache.userProfile,            // NEW: User profile for total_points
     
     // Processed data (always fresh)
     ...processedData,

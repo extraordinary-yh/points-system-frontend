@@ -64,7 +64,7 @@ export const LinkedInFollow = ({ userName, onComplete }: LinkedInFollowProps) =>
             <div className="flex items-center space-x-4 mb-4">
               <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border-2 border-stone-200">
                 <img 
-                  src="/images/p2e-logo.png" 
+                  src="/images/p2e-logo.jpg" 
                   alt="Propel2Excel Logo" 
                   className="w-full h-full object-cover"
                   onError={(e) => {

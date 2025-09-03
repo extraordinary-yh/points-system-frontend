@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { signOut } from 'next-auth/react';
 import { apiService, User } from '../services/api';
 
 interface AuthContextType {
@@ -145,15 +146,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Clear all authentication state and force redirect to login
     apiService.logout();
     localStorage.clear();
+    sessionStorage.clear();
     setUser(null);
-    // Force page reload to ensure clean state
-    setTimeout(() => window.location.reload(), 100);
+    
+    // Clear NextAuth session as well
+    signOut({ redirect: false }).then(() => {
+      // Force page reload to ensure clean state
+      setTimeout(() => window.location.reload(), 100);
+    }).catch(() => {
+      // Even if signOut fails, still reload
+      setTimeout(() => window.location.reload(), 100);
+    });
   };
 
   const handleReLogin = () => {
     setShowReLoginPrompt(false);
-    // Redirect to login page
-    window.location.href = '/auth';
+    // Clear all auth data and force clean state
+    forceLogout();
   };
 
   const dismissReLoginPrompt = () => {
