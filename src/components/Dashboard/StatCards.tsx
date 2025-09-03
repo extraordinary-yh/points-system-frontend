@@ -25,15 +25,16 @@ export const StatCards = () => {
     totalActivities, 
     dashboardStats, 
     availableRewards,
+    userProfile,
     isLoading: sharedDataLoading 
   } = useSharedDashboardData();
   
-  // ✅ Data Priority (FIXED - activity feed is more current):
-  // 1. totalPoints (calculated from activity feed - most current, 101 points)
-  // 2. dashboardStats.current_period.total_points (backend API - may be outdated, 96 points)
-  // ❌ NO session.user.total_points - creates confusion and outdated data
+  // ✅ Data Priority (FIXED - backend total_points is most current and accurate):
+  // 1. userProfile.total_points (backend API - most current and accurate)
+  // 2. dashboardStats.current_period.total_points (backend API - may be outdated)
+  // ❌ NO calculated totalPoints from activity feed - backend total_points is always correct
   //
-  // 💡 To ensure fallback data is updated, call refreshDashboardData() from external components
+  // 💡 To ensure data is updated, call refreshDashboardData() from external components
   // or use the global refresh function: window.forceDashboardRefresh()
   const [stats, setStats] = useState({
     totalPoints: 0,
@@ -44,16 +45,15 @@ export const StatCards = () => {
 
   const updateStats = async () => {
     try {
-      // ✅ FIX: Use activity feed calculation as primary source (most current)
-      // Activity feed calculation is showing correct 101 points vs dashboard stats 96 points
+      // ✅ FIXED: Use backend total_points field as primary source (most current and accurate)
       let userPoints = 0;
       
-      if (totalPoints !== undefined && totalPoints > 0) {
-        // Use activity feed calculation as primary source (most current)
-        userPoints = totalPoints;
+      if (userProfile?.total_points !== undefined) {
+        // Use backend total_points field (most current and accurate)
+        userPoints = userProfile.total_points;
         // Reduced logging for performance
         if (Math.random() < 0.05) {
-          console.log('📊 StatCards: Using activity feed total points (current):', userPoints);
+          console.log('📊 StatCards: Using backend total_points (current):', userPoints);
         }
       } else if (dashboardStats?.current_period?.total_points !== undefined) {
         // Fallback: dashboard stats (may be outdated)
@@ -115,13 +115,13 @@ export const StatCards = () => {
           userPoints, 
           activitiesCount, 
           availableIncentives,
-          dataSource: dashboardStats?.current_period?.total_points !== undefined ? 'dashboard_stats_api' : 'activity_feed_calculated_fallback'
+          dataSource: userProfile?.total_points !== undefined ? 'user_profile_api' : (dashboardStats?.current_period?.total_points !== undefined ? 'dashboard_stats_api' : 'no_data')
         });
       }
     } catch (error) {
       console.error('Error updating stats:', error);
       setStats({
-        totalPoints: dashboardStats?.current_period?.total_points || totalPoints || 0,
+        totalPoints: userProfile?.total_points || dashboardStats?.current_period?.total_points || 0,
         activitiesCompleted: dashboardStats?.current_period?.activities_completed || totalActivities || 0,
         availableRewards: 0,
         loading: false
@@ -140,7 +140,7 @@ export const StatCards = () => {
         loading: false
       });
     }
-  }, [session, status, totalPoints, totalActivities, dashboardStats, availableRewards, sharedDataLoading]); // Use shared data dependencies
+  }, [session, status, userProfile, dashboardStats, availableRewards, sharedDataLoading]); // Use shared data dependencies
 
   // Force immediate refresh when component first mounts
   useEffect(() => {
