@@ -39,7 +39,27 @@ const LeaderboardPage = () => {
       const response = await apiService.getLeaderboard(10, period, token);
       
       if (response.data) {
-        setLeaderboardData(response.data);
+        // Process the data to ensure period-specific ranking for current user
+        const processedData = { ...response.data };
+        
+        // Find current user in the main leaderboard to get period-specific rank
+        const userInLeaderboard = processedData.leaderboard.find(entry => entry.is_current_user);
+        
+        if (userInLeaderboard && processedData.current_user_rank) {
+          // If user is in the visible leaderboard, use that rank (which is period-specific)
+          console.log(`📊 User found in leaderboard at rank ${userInLeaderboard.rank} for period: ${period}`);
+          processedData.current_user_rank = {
+            ...processedData.current_user_rank,
+            rank: userInLeaderboard.rank
+          };
+        } else if (processedData.current_user_rank) {
+          // User is not in visible top 10, but we have current_user_rank data
+          // Log this for debugging to ensure backend is returning period-specific ranking
+          console.log(`📊 User not in top 10, using backend rank ${processedData.current_user_rank.rank} for period: ${period}`);
+          console.log(`📊 User period points: ${processedData.current_user_rank.points_this_period}`);
+        }
+        
+        setLeaderboardData(processedData);
       } else {
         setError(response.error || 'Failed to fetch leaderboard data');
       }
@@ -253,7 +273,10 @@ const LeaderboardPage = () => {
                         {leaderboardData.leaderboard[1]?.display_name || 'N/A'}
                       </div>
                       <div className="text-4xl font-bold text-gray-600 mb-2">
-                        {leaderboardData.leaderboard[1]?.total_points || 0}
+                        {period === 'all_time' 
+                          ? (leaderboardData.leaderboard[1]?.total_points || 0)
+                          : (leaderboardData.leaderboard[1]?.points_this_period || 0)
+                        }
                       </div>
                       <div className="text-sm text-gray-500 mb-3">points</div>
                       <div className="text-sm text-gray-500 mb-3">
@@ -275,7 +298,10 @@ const LeaderboardPage = () => {
                         {leaderboardData.leaderboard[0]?.display_name || 'N/A'}
                       </div>
                       <div className="text-4xl font-bold text-white mb-2">
-                        {leaderboardData.leaderboard[0]?.total_points || 0}
+                        {period === 'all_time' 
+                          ? (leaderboardData.leaderboard[0]?.total_points || 0)
+                          : (leaderboardData.leaderboard[0]?.points_this_period || 0)
+                        }
                       </div>
                       <div className="text-sm text-yellow-100 mb-3">points</div>
                       <div className="text-sm text-yellow-100 mb-3">
@@ -297,7 +323,10 @@ const LeaderboardPage = () => {
                         {leaderboardData.leaderboard[2]?.display_name || 'N/A'}
                       </div>
                       <div className="text-4xl font-bold text-gray-600 mb-2">
-                        {leaderboardData.leaderboard[2]?.total_points || 0}
+                        {period === 'all_time' 
+                          ? (leaderboardData.leaderboard[2]?.total_points || 0)
+                          : (leaderboardData.leaderboard[2]?.points_this_period || 0)
+                        }
                       </div>
                       <div className="text-sm text-gray-500 mb-3">points</div>
                       <div className="text-sm text-gray-500 mb-3">
