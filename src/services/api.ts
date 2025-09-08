@@ -11,14 +11,21 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
   role: 'student' | 'company' | 'university' | 'admin';
   total_points: number;
-  discord_username?: string;
-  discord_id?: string;
   university?: string;
   major?: string;
   graduation_year?: number;
+  display_name?: string;
   company?: string;
+  discord_id?: string;
+  discord_verified: boolean;
+  discord_username_unverified?: string;
+  discord_verified_at?: string;
+  media_consent?: boolean;
+  media_consent_date?: string;
   is_suspended: boolean;
   suspension_reason?: string;
   onboarding_completed?: boolean;
@@ -223,6 +230,32 @@ export interface UserPreferences {
     discord_username?: string;
     sync_activities?: boolean;
   };
+}
+
+// New types for profile management
+export interface PasswordChangeRequest {
+  current_password: string;
+  new_password: string;
+  discord_id?: string;
+}
+
+export interface DiscordVerificationStatus {
+  discord_linked: boolean;
+  discord_id?: string;
+  discord_username?: string;
+  discord_verified: boolean;
+  discord_verified_at?: string;
+  verification_required: boolean;
+}
+
+export interface ProfileUpdateRequest {
+  first_name?: string;
+  last_name?: string;
+  university?: string;
+  major?: string;
+  graduation_year?: number;
+  display_name?: string;
+  media_consent?: boolean;
 }
 
 class ApiService {
@@ -433,6 +466,24 @@ class ApiService {
 
   async getProfile(token?: string): Promise<ApiResponse<User>> {
     return this.request<User>('/users/profile/', {}, token);
+  }
+
+  async updateProfile(profileData: ProfileUpdateRequest, token?: string): Promise<ApiResponse<User>> {
+    return this.request<User>('/users/profile/', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    }, token);
+  }
+
+  async changePassword(passwordData: PasswordChangeRequest, token?: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request<{ success: boolean; message: string }>('/users/change-password/', {
+      method: 'POST',
+      body: JSON.stringify(passwordData),
+    }, token);
+  }
+
+  async getDiscordVerificationStatus(token?: string): Promise<ApiResponse<DiscordVerificationStatus>> {
+    return this.request<DiscordVerificationStatus>('/users/discord-verification/', {}, token);
   }
 
   logout(): void {

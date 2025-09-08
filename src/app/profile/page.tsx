@@ -1,11 +1,27 @@
 'use client';
+import { useState } from 'react';
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useOnboardingCheck } from "@/hooks/useOnboardingCheck";
+import { ProfileForm } from "@/components/Profile/ProfileForm";
+import { PasswordChangeForm } from "@/components/Profile/PasswordChangeForm";
+import { DiscordStatus } from "@/components/Profile/DiscordStatus";
+import { User } from "@/services/api";
 
 export default function ProfilePage() {
   const { userProfile, isLoading } = useOnboardingCheck();
   const { isCollapsed } = useSidebar();
+  const [currentUser, setCurrentUser] = useState<User | null>(userProfile);
+
+  // Update current user when profile is updated
+  const handleProfileUpdate = (updatedUser: User) => {
+    setCurrentUser(updatedUser);
+  };
+
+  // Update current user when userProfile changes from the hook
+  if (userProfile && userProfile !== currentUser) {
+    setCurrentUser(userProfile);
+  }
 
   if (isLoading) {
     return (
@@ -18,7 +34,7 @@ export default function ProfilePage() {
   }
 
   // useOnboardingCheck handles authentication and onboarding redirects
-  if (!userProfile?.onboarding_completed) {
+  if (!userProfile?.onboarding_completed || !currentUser) {
     return null;
   }
 
@@ -28,7 +44,8 @@ export default function ProfilePage() {
     }`}>
       <Sidebar />
       <div className="bg-white rounded-lg pb-4 shadow">
-          <div className="border-b px-4 mb-4 mt-2 pb-4 border-stone-200">
+        {/* Header - Consistent with other pages */}
+        <div className="border-b px-4 my-4 pb-4 border-stone-200">
           <div className="flex items-center justify-between p-0.5">
             <div>
               <span className="text-sm font-bold block">
@@ -41,14 +58,19 @@ export default function ProfilePage() {
           </div>
         </div>
         
-        <div className="px-4">
-          <div className="space-y-3">
-            <div className="text-center py-8 text-stone-500">
-              <div className="text-4xl mb-2">👤</div>
-              <p>Profile settings coming soon!</p>
-              <p className="text-sm">Customize your account and preferences</p>
-            </div>
-          </div>
+        {/* Profile Content */}
+        <div className="px-4 space-y-6">
+          {/* Profile Form - Personal Information & Account Settings */}
+          <ProfileForm 
+            user={currentUser} 
+            onProfileUpdate={handleProfileUpdate}
+          />
+          
+          {/* Discord Integration Status */}
+          <DiscordStatus user={currentUser} />
+          
+          {/* Password Change Form */}
+          <PasswordChangeForm />
         </div>
       </div>
     </main>
