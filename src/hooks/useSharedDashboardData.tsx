@@ -202,6 +202,93 @@ if (typeof window !== 'undefined') {
     
     return 'Nuclear refresh initiated - page will reload';
   };
+
+  // 🐛 DEBUG: Helper function to compare data freshness
+  (window as any).debugPointTracker = () => {
+    console.log('🔍 POINT TRACKER DEBUG COMPARISON');
+    
+    const timeline = globalCache.timelineData?.timeline;
+    const activityFeed = globalCache.activityFeed?.feed;
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    console.log('📊 Timeline Data:', {
+      hasData: !!timeline,
+      entries: timeline?.length || 0,
+      latestDate: timeline?.[timeline.length - 1]?.date,
+      latestPoints: timeline?.[timeline.length - 1]?.points_earned,
+      latestCumulative: timeline?.[timeline.length - 1]?.cumulative_points,
+      todaysEntry: timeline?.find(entry => entry.date === todayStr),
+      isLatestToday: timeline?.[timeline.length - 1]?.date === todayStr
+    });
+    
+    const todaysActivities = activityFeed?.filter(item => 
+      item.timestamp.startsWith(todayStr) && item.type === 'activity'
+    ) || [];
+    
+    console.log('📰 Activity Feed Data:', {
+      hasData: !!activityFeed,
+      totalItems: activityFeed?.length || 0,
+      latestActivity: activityFeed?.[0],
+      todaysActivities: todaysActivities.length,
+      todaysPoints: todaysActivities.reduce((sum, item) => sum + item.points_change, 0),
+      lastFetch: globalCache.lastFetch ? new Date(globalCache.lastFetch).toLocaleTimeString() : 'never'
+    });
+    
+    console.log('🎯 Backend Total Points:', {
+      userProfile: globalCache.userProfile?.total_points,
+      dashboardStats: globalCache.dashboardStats?.current_period?.total_points
+    });
+    
+    return {
+      timeline: timeline?.length || 0,
+      activityFeed: activityFeed?.length || 0,
+      todaysActivities: todaysActivities.length,
+      backendTotal: globalCache.userProfile?.total_points || 0
+    };
+  };
+
+  // 🐛 DEBUG: Helper function to analyze activity feed for negative points
+  (window as any).debugActivityFeed = () => {
+    console.log('🔍 ACTIVITY FEED ANALYSIS');
+    
+    const activityFeed = globalCache.activityFeed?.feed;
+    if (!activityFeed) {
+      console.log('❌ No activity feed data available');
+      return;
+    }
+    
+    const activities = activityFeed.filter(item => item.type === 'activity');
+    const redemptions = activityFeed.filter(item => item.type === 'redemption');
+    
+    console.log('📊 Activity Feed Breakdown:', {
+      totalItems: activityFeed.length,
+      activities: activities.length,
+      redemptions: redemptions.length,
+      activityPoints: activities.reduce((sum, item) => sum + item.points_change, 0),
+      redemptionPoints: redemptions.reduce((sum, item) => sum + item.points_change, 0), // Should be negative
+      netPoints: activities.reduce((sum, item) => sum + item.points_change, 0) + redemptions.reduce((sum, item) => sum + item.points_change, 0)
+    });
+    
+    // Show recent activities and redemptions
+    console.log('📈 Recent Activities (last 5):', activities.slice(0, 5).map(item => ({
+      timestamp: item.timestamp,
+      points: item.points_change,
+      description: item.description
+    })));
+    
+    console.log('🎁 Recent Redemptions (last 5):', redemptions.slice(0, 5).map(item => ({
+      timestamp: item.timestamp,
+      points: item.points_change,
+      description: item.description
+    })));
+    
+    return {
+      totalItems: activityFeed.length,
+      activities: activities.length,
+      redemptions: redemptions.length,
+      netPoints: activities.reduce((sum, item) => sum + item.points_change, 0) + redemptions.reduce((sum, item) => sum + item.points_change, 0)
+    };
+  };
 }
 
 export const useSharedDashboardData = () => {
@@ -335,7 +422,27 @@ export const useSharedDashboardData = () => {
         errorMessage = activityFeedResponse.error;
       } else if (activityFeedResponse.data) {
         globalCache.activityFeed = activityFeedResponse.data;
-        console.log('✅ Activity feed: 22 items, 21 activities, 1 redemptions');
+        
+        // 🐛 DEBUG: Compare activity feed with timeline data
+        const latestActivity = activityFeedResponse.data.feed[0]; // Most recent first
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todaysActivities = activityFeedResponse.data.feed.filter(item => 
+          item.timestamp.startsWith(todayStr) && item.type === 'activity'
+        );
+        
+        console.log('✅ Activity feed loaded', {
+          totalItems: activityFeedResponse.data.feed.length,
+          totalActivities: activityFeedResponse.data.total_activities,
+          totalRedemptions: activityFeedResponse.data.total_redemptions,
+          latestActivity: latestActivity ? {
+            timestamp: latestActivity.timestamp,
+            type: latestActivity.type,
+            points: latestActivity.points_change,
+            description: latestActivity.description
+          } : null,
+          todaysActivities: todaysActivities.length,
+          todaysPoints: todaysActivities.reduce((sum, item) => sum + item.points_change, 0)
+        });
       }
 
       // Handle timeline response
@@ -345,7 +452,29 @@ export const useSharedDashboardData = () => {
         errorMessage = timelineResponse.error;
       } else if (timelineResponse.data) {
         globalCache.timelineData = timelineResponse.data;
-        console.log('✅ Timeline data loaded');
+        
+        // 🐛 DEBUG: Detailed timeline logging
+        const timeline = timelineResponse.data.timeline;
+        const latestEntry = timeline[timeline.length - 1];
+        const secondLatest = timeline[timeline.length - 2];
+        
+        console.log('✅ Timeline data loaded', {
+          totalEntries: timeline.length,
+          dateRange: `${timeline[0]?.date} to ${latestEntry?.date}`,
+          latestEntry: {
+            date: latestEntry?.date,
+            points_earned: latestEntry?.points_earned,
+            cumulative: latestEntry?.cumulative_points,
+            activities: latestEntry?.activities_count,
+            isToday: latestEntry?.date === new Date().toISOString().split('T')[0]
+          },
+          secondLatest: secondLatest ? {
+            date: secondLatest.date,
+            points_earned: secondLatest.points_earned,
+            cumulative: secondLatest.cumulative_points
+          } : null,
+          todaysDate: new Date().toISOString().split('T')[0]
+        });
       }
 
       // Handle dashboard stats response
