@@ -15,8 +15,17 @@ export const RecentTransactions = () => {
   }
 
   const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    // ✅ CLEAN: Handle both timestamps and date strings properly
+    if (timestamp.includes('T')) {
+      // Full timestamp (e.g., "2025-09-08T14:30:00Z") - use as is
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else { 
+      // Date-only string (e.g., "2025-09-08") - parse manually to avoid timezone shift
+      const [year, month, day] = timestamp.split('-').map(num => parseInt(num, 10));
+      const date = new Date(year, month - 1, day);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
   };
 
   return (
