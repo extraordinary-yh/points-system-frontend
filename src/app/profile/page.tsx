@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useOnboardingCheck } from "@/hooks/useOnboardingCheck";
@@ -11,17 +11,21 @@ import { User } from "@/services/api";
 export default function ProfilePage() {
   const { userProfile, isLoading } = useOnboardingCheck();
   const { isCollapsed } = useSidebar();
-  const [currentUser, setCurrentUser] = useState<User | null>(userProfile);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Initialize current user when userProfile is first loaded
+  useEffect(() => {
+    if (userProfile && !currentUser) {
+      setCurrentUser(userProfile);
+    }
+  }, [userProfile, currentUser]);
 
   // Update current user when profile is updated
   const handleProfileUpdate = (updatedUser: User) => {
+    console.log('Parent: handleProfileUpdate called with:', updatedUser);
+    console.log('Parent: updatedUser.media_consent:', updatedUser.media_consent);
     setCurrentUser(updatedUser);
   };
-
-  // Update current user when userProfile changes from the hook
-  if (userProfile && userProfile !== currentUser) {
-    setCurrentUser(userProfile);
-  }
 
   if (isLoading) {
     return (

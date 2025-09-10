@@ -483,7 +483,7 @@ class ApiService {
   }
 
   async getDiscordVerificationStatus(token?: string): Promise<ApiResponse<DiscordVerificationStatus>> {
-    return this.request<DiscordVerificationStatus>('/users/discord-verification/', {}, token);
+    return this.request<DiscordVerificationStatus>('/users/discord_verification/', {}, token);
   }
 
   logout(): void {
