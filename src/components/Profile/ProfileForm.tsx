@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, ProfileUpdateRequest, apiService } from '@/services/api';
 import { useSession } from 'next-auth/react';
 
@@ -15,6 +15,9 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isUpdatingConsent, setIsUpdatingConsent] = useState(false);
+  // Separate state for media consent to avoid conflicts
+  const [mediaConsentState, setMediaConsentState] = useState(user.media_consent || false);
   
   const [formData, setFormData] = useState<ProfileUpdateRequest>({
     first_name: user.first_name || '',
@@ -22,9 +25,35 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
     university: user.university || '',
     major: user.major || '',
     graduation_year: user.graduation_year || undefined,
-    display_name: user.display_name || user.username,
     media_consent: user.media_consent || false,
   });
+
+  // Update form data when user prop changes (e.g., after profile update)
+  // But completely isolate media_consent to avoid conflicts
+  useEffect(() => {
+    console.log('useEffect triggered - user.media_consent:', user.media_consent, 'isUpdatingConsent:', isUpdatingConsent);
+    
+    setFormData(prev => ({
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      university: user.university || '',
+      major: user.major || '',
+      graduation_year: user.graduation_year || undefined,
+      media_consent: prev.media_consent, // Keep existing value during updates
+    }));
+    
+    // Only update mediaConsentState if we're not in the middle of an update
+    if (!isUpdatingConsent) {
+      console.log('Updating mediaConsentState from user prop:', user.media_consent);
+      setMediaConsentState(user.media_consent || false);
+      setFormData(prev => ({
+        ...prev,
+        media_consent: user.media_consent || false,
+      }));
+    } else {
+      console.log('Skipping mediaConsentState update - currently updating');
+    }
+  }, [user, isUpdatingConsent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -63,7 +92,20 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
         setError(response.error);
       } else if (response.data) {
         setSuccess('Profile updated successfully!');
+        
+        // Make sure to call onProfileUpdate with the server response
         onProfileUpdate(response.data);
+        
+        // Fetch fresh data to ensure consistency
+        try {
+          const freshProfileResponse = await apiService.getProfile(session.djangoAccessToken);
+          if (freshProfileResponse.data) {
+            onProfileUpdate(freshProfileResponse.data);
+          }
+        } catch (freshDataError) {
+          console.warn('Failed to fetch fresh profile data:', freshDataError);
+        }
+        
         setIsEditing(false);
         
         // Clear success message after 3 seconds
@@ -83,12 +125,71 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
       university: user.university || '',
       major: user.major || '',
       graduation_year: user.graduation_year || undefined,
-      display_name: user.display_name || user.username,
       media_consent: user.media_consent || false,
     });
     setIsEditing(false);
     setError(null);
     setSuccess(null);
+  };
+
+  // Separate handler for media consent toggle - works independently
+  const handleMediaConsentToggle = async (newConsent: boolean) => {
+    if (!session?.djangoAccessToken || isUpdatingConsent) return;
+
+    setIsUpdatingConsent(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await apiService.updateProfile(
+        { media_consent: newConsent }, 
+        session.djangoAccessToken
+      );
+      
+      if (response.error) {
+        setError(response.error);
+        // Revert both states since backend failed
+        setMediaConsentState(!newConsent);
+        setFormData(prev => ({
+          ...prev,
+          media_consent: !newConsent
+        }));
+      } else if (response.data) {
+        setSuccess(`Media consent ${newConsent ? 'granted' : 'withdrawn'} successfully!`);
+        
+        // Debug: Log the backend response
+        console.log('Backend response for media consent:', response.data);
+        console.log('Backend media_consent value:', response.data.media_consent);
+        
+        // Extract the actual user data from the nested response
+        const userData = (response.data as any).data || response.data;
+        console.log('Extracted user data:', userData);
+        console.log('Extracted media_consent:', userData.media_consent);
+        
+        // Keep the optimistic update in place - don't override it
+        setMediaConsentState(newConsent);
+        setFormData(prev => ({
+          ...prev,
+          media_consent: newConsent
+        }));
+        
+        // Update parent component with the actual user data, not the wrapper
+        onProfileUpdate(userData);
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    } catch (err) {
+      setError('Failed to update media consent. Please try again.');
+      // Revert both states since backend failed
+      setMediaConsentState(!newConsent);
+      setFormData(prev => ({
+        ...prev,
+        media_consent: !newConsent
+      }));
+    } finally {
+      setIsUpdatingConsent(false);
+    }
   };
 
   const formatMemberSince = (dateString: string) => {
@@ -184,26 +285,6 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
             )}
           </div>
 
-          {/* Display Name */}
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
-              Display Name
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="display_name"
-                value={formData.display_name}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="How you want to be displayed"
-                required
-              />
-            ) : (
-              <p className="text-stone-900 py-2">{user.display_name || user.username}</p>
-            )}
-          </div>
-
           {/* University */}
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
@@ -267,12 +348,25 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
 
       {/* Account Settings Section */}
       <div className="bg-white border border-stone-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-stone-900 mb-4">Account Settings</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-stone-900">Account Settings</h3>
+          {/* Media Consent Status - positioned with header */}
+          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            mediaConsentState 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            <div className={`w-2 h-2 rounded-full mr-2 ${
+              mediaConsentState ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            {mediaConsentState ? 'Consent Granted' : 'Consent Not Given'}
+          </div>
+        </div>
         
         <div className="space-y-4">
           {/* Media Consent */}
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
               <label className="block text-sm font-medium text-stone-700">
                 Media Consent Agreement
               </label>
@@ -280,26 +374,36 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
                 Allow Propel2Excel to use your photos and activities in promotional materials
               </p>
             </div>
-            {isEditing ? (
+            
+            <div className="flex flex-col items-end">
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  name="media_consent"
-                  checked={formData.media_consent}
-                  onChange={handleInputChange}
+                  checked={mediaConsentState}
+                  onChange={(e) => {
+                    const newValue = e.target.checked;
+                    // Optimistically update both states for immediate UI feedback
+                    setMediaConsentState(newValue);
+                    setFormData(prev => ({ ...prev, media_consent: newValue }));
+                    // Then update the backend
+                    handleMediaConsentToggle(newValue);
+                  }}
+                  disabled={isUpdatingConsent}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className={`w-11 h-6 bg-stone-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${
+                  isUpdatingConsent ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}></div>
               </label>
-            ) : (
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                user.media_consent 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {user.media_consent ? 'Agreed' : 'Not Agreed'}
-              </span>
-            )}
+              
+              {/* Loading indicator */}
+              {isUpdatingConsent && (
+                <div className="text-xs text-stone-500 mt-1 flex items-center">
+                  <div className="animate-spin -ml-1 mr-2 h-3 w-3 border-2 border-stone-300 border-t-stone-600 rounded-full"></div>
+                  Updating...
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

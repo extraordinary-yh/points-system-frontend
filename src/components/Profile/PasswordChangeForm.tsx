@@ -206,24 +206,6 @@ export function PasswordChangeForm() {
         </div>
       )}
 
-      {/* Discord Verification Info */}
-      {discordStatus && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">Discord Integration Status</h4>
-          <div className="text-sm text-blue-800">
-            <p><strong>Status:</strong> {discordStatus.discord_verified ? 'Verified' : 'Not Verified'}</p>
-            {discordStatus.discord_username && (
-              <p><strong>Discord Username:</strong> {discordStatus.discord_username}</p>
-            )}
-            {discordStatus.verification_required && (
-              <p className="text-blue-700 mt-2">
-                <FiAlertCircle className="inline mr-1" size={14} />
-                Discord verification is required for password changes
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Current Password */}
