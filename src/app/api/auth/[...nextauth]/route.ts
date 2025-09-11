@@ -48,6 +48,7 @@ const handler = NextAuth({
               total_points: data.user.total_points,
               discord_username: data.user.discord_username,
               discord_id: data.user.discord_id,
+              discord_verified: data.user.discord_verified || false,
               university: data.user.university,
               major: data.user.major,
               graduation_year: data.user.graduation_year,
@@ -88,25 +89,27 @@ const handler = NextAuth({
     async jwt({ token, user }) {
       // Store Django user data and tokens in JWT
       if (user) {
-        token.djangoAccessToken = user.djangoAccessToken;
-        token.djangoRefreshToken = user.djangoRefreshToken;
+        const customUser = user as any; // Cast to access our custom properties
+        token.djangoAccessToken = customUser.djangoAccessToken;
+        token.djangoRefreshToken = customUser.djangoRefreshToken;
         token.userData = {
-          id: parseInt(user.id),
-          username: user.username || '',
-          email: user.email || '',
-          role: user.role || 'student',
-          total_points: user.total_points || 0,
-          discord_username: user.discord_username,
-          discord_id: user.discord_id,
-          university: user.university,
-          major: user.major,
-          graduation_year: user.graduation_year,
-          company: user.company,
-          is_suspended: user.is_suspended || false,
-          suspension_reason: user.suspension_reason,
-          created_at: user.created_at || '',
-          updated_at: user.updated_at || '',
-        };
+          id: parseInt(customUser.id),
+          username: customUser.username || '',
+          email: customUser.email || '',
+          role: customUser.role || 'student',
+          total_points: customUser.total_points || 0,
+          discord_username: customUser.discord_username,
+          discord_id: customUser.discord_id,
+          discord_verified: customUser.discord_verified || false,
+          university: customUser.university,
+          major: customUser.major,
+          graduation_year: customUser.graduation_year,
+          company: customUser.company,
+          is_suspended: customUser.is_suspended || false,
+          suspension_reason: customUser.suspension_reason,
+          created_at: customUser.created_at || '',
+          updated_at: customUser.updated_at || '',
+        } as any;
       }
       return token;
     },
