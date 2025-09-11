@@ -47,7 +47,7 @@ const LeaderboardPage = () => {
         
         if (userInLeaderboard && processedData.current_user_rank) {
           // If user is in the visible leaderboard, use that rank (which is period-specific)
-          console.log(`📊 User found in leaderboard at rank ${userInLeaderboard.rank} for period: ${period}`);
+          // User found in leaderboard
           processedData.current_user_rank = {
             ...processedData.current_user_rank,
             rank: userInLeaderboard.rank
@@ -55,8 +55,7 @@ const LeaderboardPage = () => {
         } else if (processedData.current_user_rank) {
           // User is not in visible top 10, but we have current_user_rank data
           // Log this for debugging to ensure backend is returning period-specific ranking
-          console.log(`📊 User not in top 10, using backend rank ${processedData.current_user_rank.rank} for period: ${period}`);
-          console.log(`📊 User period points: ${processedData.current_user_rank.points_this_period}`);
+          // User not in top 10, using backend rank
         }
         
         setLeaderboardData(processedData);
@@ -66,7 +65,7 @@ const LeaderboardPage = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(`Error: ${errorMessage}`);
-      console.error('Leaderboard fetch error:', err);
+      // Leaderboard fetch error
     } finally {
       setLoading(false);
     }

@@ -58,7 +58,7 @@ const RewardsContent = () => {
           const userProfileResponse = await apiService.getProfile(session.djangoAccessToken);
           if (userProfileResponse.data?.total_points !== undefined) {
             setCurrentUserPoints(userProfileResponse.data.total_points);
-            console.log('✅ Fresh user points loaded:', userProfileResponse.data.total_points);
+            // Fresh user points loaded
           }
 
           // Try new API first
@@ -118,7 +118,7 @@ const RewardsContent = () => {
           
           setRedemptionHistory(historyArray);
         } catch (error) {
-          console.error('❌ Failed to fetch rewards data:', error);
+          // Failed to fetch rewards data
           setRewards([]);
           setRedemptionHistory([]);
         }
@@ -155,7 +155,7 @@ const RewardsContent = () => {
         // Update current user points from fresh API data
         if (userProfileResponse.data?.total_points !== undefined) {
           setCurrentUserPoints(userProfileResponse.data.total_points);
-          console.log('✅ Updated user points after redemption:', userProfileResponse.data.total_points);
+          // Updated user points after redemption
         }
         
         // Handle object structure for refreshed data too
@@ -177,7 +177,7 @@ const RewardsContent = () => {
         setActiveTab('history');
       }
     } catch (error) {
-      console.error('Failed to redeem reward:', error);
+      // Failed to redeem reward
       alert('Failed to redeem reward. Please try again.');
     } finally {
       setRedeeming(null);
@@ -525,6 +525,7 @@ const AvailableRewards = ({
         return (
           <div
             key={reward.id}
+            data-reward-id={reward.id}
             className={`${getCardClassName(status)} p-6 transition-all duration-300 hover:scale-105 flex flex-col h-full`}
           >
             {/* Card Header */}

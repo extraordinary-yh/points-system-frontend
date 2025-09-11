@@ -41,7 +41,7 @@ export function PasswordChangeForm() {
           }
         }
       } catch (err) {
-        console.error('Failed to fetch Discord status:', err);
+        // Failed to fetch Discord status
       }
     };
 

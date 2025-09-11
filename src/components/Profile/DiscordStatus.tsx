@@ -30,7 +30,7 @@ export function DiscordStatus({ user }: DiscordStatusProps) {
         }
       } catch (err) {
         setError('Failed to fetch Discord status');
-        console.error('Discord status error:', err);
+        // Discord status error
       } finally {
         setIsLoading(false);
       }

@@ -17,8 +17,7 @@ const handler = NextAuth({
         }
 
         try {
-          console.log('🔐 NextAuth attempting login to:', `${API_BASE_URL}/users/login/`);
-          console.log('🔐 Username:', credentials.username);
+          // NextAuth attempting login
           
           // Call your existing Django login endpoint
           const response = await fetch(`${API_BASE_URL}/users/login/`, {
@@ -32,11 +31,10 @@ const handler = NextAuth({
             }),
           });
 
-          console.log('🔐 Django response status:', response.status);
-          console.log('🔐 Django response headers:', Object.fromEntries(response.headers.entries()));
+          // Django response received
 
           const data = await response.json();
-          console.log('🔐 Django response data:', data);
+          // Django response data processed
 
           if (response.ok && data.user && data.tokens) {
             // Return user data in NextAuth format
@@ -65,17 +63,17 @@ const handler = NextAuth({
 
           // Handle specific error cases
           if (response.status === 401) {
-            console.error('Authentication failed: Invalid credentials');
+            // Authentication failed: Invalid credentials
             throw new Error('Invalid username or password');
           } else if (response.status === 403) {
-            console.error('Authentication failed: Account suspended or restricted');
+            // Authentication failed: Account suspended or restricted
             throw new Error('Account is suspended or restricted');
           } else {
-            console.error('Authentication failed:', data.error || data.detail || 'Unknown error');
+            // Authentication failed
             throw new Error(data.error || data.detail || 'Authentication failed');
           }
         } catch (error) {
-          console.error('Login error:', error);
+          // Login error
           // Re-throw the error so NextAuth can handle it properly
           throw error;
         }

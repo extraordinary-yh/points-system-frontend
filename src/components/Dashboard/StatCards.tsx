@@ -51,23 +51,14 @@ export const StatCards = () => {
       if (userProfile?.total_points !== undefined) {
         // Use backend total_points field (most current and accurate)
         userPoints = userProfile.total_points;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 StatCards: Using backend total_points (current):', userPoints);
-        }
+        // Using backend total_points (current)
       } else if (dashboardStats?.current_period?.total_points !== undefined) {
         // Fallback: dashboard stats (may be outdated)
         userPoints = dashboardStats.current_period.total_points;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 StatCards: Using dashboard stats total points (fallback):', userPoints);
-        }
+        // Using dashboard stats total points (fallback)
       } else {
         userPoints = 0;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 StatCards: No point data available');
-        }
+        // No point data available
       }
 
       let activitiesCount = 0;
@@ -75,19 +66,13 @@ export const StatCards = () => {
       if (dashboardStats?.current_period?.activities_completed !== undefined) {
         // Use dashboard stats for activities completed
         activitiesCount = dashboardStats.current_period.activities_completed;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 Using dashboard stats activities completed:', activitiesCount);
-        }
+        // Using dashboard stats activities completed
       } else {
         // Fallback: calculated total from activity feed
         // This fallback gets updated when refreshDashboardData() is called
         activitiesCount = totalActivities || 0;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 Using calculated activities from activity feed (fallback):', activitiesCount);
-          console.log('⚠️ Fallback data used - consider calling refreshDashboardData() to update');
-        }
+        // Using calculated activities from activity feed (fallback)
+        console.warn('⚠️ Fallback data used - consider calling refreshDashboardData() to update');
       }
 
       let availableIncentives = 0;
@@ -109,17 +94,9 @@ export const StatCards = () => {
         loading: sharedDataLoading
       });
       
-      // Reduced logging for performance
-      if (Math.random() < 0.05) {
-        console.log('📊 StatCards updated:', { 
-          userPoints, 
-          activitiesCount, 
-          availableIncentives,
-          dataSource: userProfile?.total_points !== undefined ? 'user_profile_api' : (dashboardStats?.current_period?.total_points !== undefined ? 'dashboard_stats_api' : 'no_data')
-        });
-      }
+      // StatCards updated successfully
     } catch (error) {
-      console.error('Error updating stats:', error);
+      // Error updating stats
       setStats({
         totalPoints: userProfile?.total_points || dashboardStats?.current_period?.total_points || 0,
         activitiesCompleted: dashboardStats?.current_period?.activities_completed || totalActivities || 0,

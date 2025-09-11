@@ -22,7 +22,7 @@ export const LinkedInFollow = ({ userName, onComplete }: LinkedInFollowProps) =>
       try {
         await apiService.trackLinkedInFollow('company', session.djangoAccessToken);
       } catch (error) {
-        console.error('Failed to track P2E follow:', error);
+        // Failed to track P2E follow
       }
     }
   };
@@ -36,7 +36,7 @@ export const LinkedInFollow = ({ userName, onComplete }: LinkedInFollowProps) =>
       try {
         await apiService.trackLinkedInFollow('founder', session.djangoAccessToken);
       } catch (error) {
-        console.error('Failed to track founder follow:', error);
+        // Failed to track founder follow
       }
     }
   };
@@ -202,7 +202,7 @@ export const LinkedInFollow = ({ userName, onComplete }: LinkedInFollowProps) =>
                 try {
                   await apiService.completeOnboarding(session.djangoAccessToken);
                 } catch (error) {
-                  console.error('Failed to mark onboarding as complete:', error);
+                  // Failed to mark onboarding as complete
                 }
               }
               onComplete();

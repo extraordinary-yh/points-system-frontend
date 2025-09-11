@@ -41,11 +41,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className={`grid gap-4 p-4 transition-all duration-300 ${
+    <main className={`grid gap-4 p-4 transition-all duration-300 h-screen ${
       isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
     }`}>
       <Sidebar />
-      <div className="bg-white rounded-lg pb-4 shadow">
+      <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto">
         {/* Header - Consistent with other pages */}
         <div className="border-b px-4 my-4 pb-4 border-stone-200">
           <div className="flex items-center justify-between p-0.5">

@@ -1,6 +1,21 @@
 import { Command } from "cmdk";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { FiEye, FiLink, FiLogOut, FiPhone, FiPlus } from "react-icons/fi";
+import { 
+  FiHome, 
+  FiGift, 
+  FiAward, 
+  FiUser, 
+  FiSettings, 
+  FiLogOut, 
+  FiTrendingUp,
+  FiActivity,
+  FiSearch,
+  FiExternalLink,
+  FiStar
+} from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import { apiService, Incentive } from "@/services/api";
 
 export const CommandMenu = ({
   open,
@@ -10,13 +25,46 @@ export const CommandMenu = ({
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
   const [value, setValue] = useState("");
+  const [rewards, setRewards] = useState<Incentive[]>([]);
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const router = useRouter();
+  const { data: session } = useSession();
 
-  // Toggle the menu when ⌘K is pressed
+  // Fetch rewards when menu opens
+  useEffect(() => {
+    if (open && session?.djangoAccessToken && rewards.length === 0) {
+      fetchRewards();
+    }
+  }, [open, session?.djangoAccessToken, rewards.length]);
+
+  // Toggle the menu when ⌘K is pressed and handle navigation shortcuts
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
+      }
+      
+      // Navigation shortcuts
+      if (e.metaKey || e.ctrlKey) {
+        switch (e.key) {
+          case "1":
+            e.preventDefault();
+            handleNavigation("/dashboard");
+            break;
+          case "2":
+            e.preventDefault();
+            handleNavigation("/rewards");
+            break;
+          case "3":
+            e.preventDefault();
+            handleNavigation("/leaderboard");
+            break;
+          case "4":
+            e.preventDefault();
+            handleNavigation("/profile");
+            break;
+        }
       }
     };
 
@@ -24,11 +72,75 @@ export const CommandMenu = ({
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  const fetchRewards = async () => {
+    if (!session?.djangoAccessToken) return;
+    
+    setLoadingRewards(true);
+    try {
+      let rewardsResponse;
+      try {
+        rewardsResponse = await apiService.getAvailableRewards(session.djangoAccessToken);
+      } catch (error) {
+        console.warn('New rewards API failed, trying fallback:', error);
+        rewardsResponse = await apiService.getIncentives(session.djangoAccessToken);
+      }
+      
+      let rewardsArray: Incentive[] = [];
+      
+      if (rewardsResponse.data) {
+        if (Array.isArray(rewardsResponse.data)) {
+          rewardsArray = rewardsResponse.data;
+        } else if ((rewardsResponse.data as any).rewards && Array.isArray((rewardsResponse.data as any).rewards)) {
+          rewardsArray = (rewardsResponse.data as any).rewards;
+        }
+      }
+      
+      setRewards(rewardsArray);
+    } catch (error) {
+      console.warn('Failed to fetch rewards for search:', error);
+      setRewards([]);
+    } finally {
+      setLoadingRewards(false);
+    }
+  };
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+    setOpen(false);
+  };
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/" });
+    setOpen(false);
+  };
+
+  const handleRewardSelect = (reward: Incentive) => {
+    // Navigate to rewards page first
+    router.push("/rewards");
+    setOpen(false);
+    
+    // Then scroll to the specific reward after a short delay
+    setTimeout(() => {
+      const rewardElement = document.querySelector(`[data-reward-id="${reward.id}"]`);
+      if (rewardElement) {
+        rewardElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        // Add a highlight effect
+        rewardElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        setTimeout(() => {
+          rewardElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        }, 3000);
+      }
+    }, 100);
+  };
+
   return (
     <Command.Dialog
       open={open}
       onOpenChange={setOpen}
-      label="Global Command Menu"
+      label="Propel2Excel Command Menu"
       className="fixed inset-0 bg-stone-950/50"
       onClick={() => setOpen(false)}
     >
@@ -39,44 +151,172 @@ export const CommandMenu = ({
         <Command.Input
           value={value}
           onValueChange={setValue}
-          placeholder="What do you need?"
+          placeholder="Search rewards, navigate, or get help..."
           className="relative border-b border-stone-300 p-3 text-lg w-full placeholder:text-stone-400 focus:outline-none"
         />
-        <Command.List className="p-3">
+        <Command.List className="max-h-96 overflow-y-auto p-3">
           <Command.Empty>
-            No results found for{" "}
-            <span className="text-violet-500">"{value}"</span>
+            <div className="flex flex-col items-center py-8 text-stone-500">
+              <FiSearch className="w-8 h-8 mb-2" />
+              <p>No results found for</p>
+              <span className="text-violet-500 font-medium">"{value}"</span>
+              <p className="text-sm mt-1">Try searching for rewards, pages, or actions</p>
+            </div>
           </Command.Empty>
 
-          <Command.Group heading="Team" className="text-sm mb-3 text-stone-400">
-            <Command.Item className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2">
-              <FiPlus />
-              Invite Member
+          <Command.Group heading="Navigation" className="text-sm mb-3 text-stone-400">
+            <Command.Item 
+              onSelect={() => handleNavigation("/dashboard")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiHome />
+              <span>Dashboard</span>
+              <span className="ml-auto text-xs text-stone-400">⌘1</span>
             </Command.Item>
-            <Command.Item className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2">
-              <FiEye />
-              See Org Chart
+            <Command.Item 
+              onSelect={() => handleNavigation("/rewards")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiGift />
+              <span>Rewards</span>
+              <span className="ml-auto text-xs text-stone-400">⌘2</span>
+            </Command.Item>
+            <Command.Item 
+              onSelect={() => handleNavigation("/leaderboard")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiAward />
+              <span>Leaderboard</span>
+              <span className="ml-auto text-xs text-stone-400">⌘3</span>
+            </Command.Item>
+            <Command.Item 
+              onSelect={() => handleNavigation("/profile")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiUser />
+              <span>Profile</span>
+              <span className="ml-auto text-xs text-stone-400">⌘4</span>
             </Command.Item>
           </Command.Group>
 
-          <Command.Group
-            heading="Integrations"
-            className="text-sm text-stone-400 mb-3"
-          >
-            <Command.Item className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2">
-              <FiLink />
-              Link Services
+          <Command.Group heading="Quick Actions" className="text-sm mb-3 text-stone-400">
+            <Command.Item 
+              onSelect={() => handleNavigation("/rewards")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiAward />
+              <span>Redeem Points</span>
+              <span className="ml-auto text-xs text-stone-400">Points → Rewards</span>
             </Command.Item>
-            <Command.Item className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2">
-              <FiPhone />
-              Contact Support
+            <Command.Item 
+              onSelect={() => handleNavigation("/leaderboard")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiTrendingUp />
+              <span>View Rankings</span>
+              <span className="ml-auto text-xs text-stone-400">See your position</span>
+            </Command.Item>
+            <Command.Item 
+              onSelect={() => handleNavigation("/dashboard")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiActivity />
+              <span>Recent Activity</span>
+              <span className="ml-auto text-xs text-stone-400">View points history</span>
             </Command.Item>
           </Command.Group>
 
-          <Command.Item className="flex cursor-pointer transition-colors p-2 text-sm text-stone-50 hover:bg-stone-700 bg-stone-950 rounded items-center gap-2">
-            <FiLogOut />
-            Sign Out
-          </Command.Item>
+          {/* Searchable Rewards */}
+          {rewards.length > 0 && (
+            <Command.Group heading="Rewards" className="text-sm mb-3 text-stone-400">
+              {rewards.slice(0, 8).map((reward) => (
+                <Command.Item
+                  key={reward.id}
+                  onSelect={() => handleRewardSelect(reward)}
+                  className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+                >
+                  <FiStar />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{reward.name}</div>
+                    <div className="text-xs text-stone-500 truncate">
+                      {reward.points_required} points
+                      {reward.stock_available !== undefined && ` • ${reward.stock_available} left`}
+                    </div>
+                  </div>
+                  <span className="text-xs text-stone-400">View</span>
+                </Command.Item>
+              ))}
+              {rewards.length > 8 && (
+                <Command.Item 
+                  onSelect={() => handleNavigation("/rewards")}
+                  className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+                >
+                  <FiGift />
+                  <span>View All Rewards ({rewards.length})</span>
+                  <span className="ml-auto text-xs text-stone-400">→</span>
+                </Command.Item>
+              )}
+            </Command.Group>
+          )}
+
+          <Command.Group heading="Rewards Categories" className="text-sm mb-3 text-stone-400">
+            <Command.Item 
+              onSelect={() => handleNavigation("/rewards?category=merchandise")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiGift />
+              <span>Merchandise</span>
+              <span className="ml-auto text-xs text-stone-400">Physical items</span>
+            </Command.Item>
+            <Command.Item 
+              onSelect={() => handleNavigation("/rewards?category=experiences")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiAward />
+              <span>Experiences</span>
+              <span className="ml-auto text-xs text-stone-400">Events & activities</span>
+            </Command.Item>
+            <Command.Item 
+              onSelect={() => handleNavigation("/rewards?category=digital")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiExternalLink />
+              <span>Digital Rewards</span>
+              <span className="ml-auto text-xs text-stone-400">Online perks</span>
+            </Command.Item>
+          </Command.Group>
+
+          <Command.Group heading="Account" className="text-sm mb-3 text-stone-400">
+            <Command.Item 
+              onSelect={() => handleNavigation("/profile")}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+            >
+              <FiSettings />
+              <span>Account Settings</span>
+              <span className="ml-auto text-xs text-stone-400">Manage profile</span>
+            </Command.Item>
+            <Command.Item 
+              onSelect={handleSignOut}
+              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-50 hover:bg-stone-700 bg-stone-950 rounded items-center gap-2"
+            >
+              <FiLogOut />
+              <span>Sign Out</span>
+              <span className="ml-auto text-xs text-stone-300">
+                {session?.user?.email}
+              </span>
+            </Command.Item>
+          </Command.Group>
+
+          <div className="mt-4 pt-3 border-t border-stone-200">
+            <div className="flex items-center justify-between text-xs text-stone-400">
+              <span>Propel2Excel Points System</span>
+              <div className="flex items-center gap-4">
+                <span>⌘K to open</span>
+                <span>↑↓ to navigate</span>
+                <span>↵ to select</span>
+              </div>
+            </div>
+          </div>
         </Command.List>
       </div>
     </Command.Dialog>

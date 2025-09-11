@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthWrapper } from "../components/AuthWrapper";
 import { SidebarProvider } from "../contexts/SidebarContext";
 import { ReLoginPrompt } from "../components/Auth/ReLoginPrompt";
+import { SystemStatus } from "../components/SystemStatus";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
           <SidebarProvider>
             {children}
             <ReLoginPrompt />
+            <SystemStatus />
           </SidebarProvider>
         </AuthWrapper>
       </body>
