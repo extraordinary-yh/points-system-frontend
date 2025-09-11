@@ -45,8 +45,8 @@ export const CommandMenu = ({
         setOpen((open) => !open);
       }
       
-      // Navigation shortcuts
-      if (e.metaKey || e.ctrlKey) {
+      // Navigation shortcuts (only when menu is closed)
+      if (!open && e.metaKey || e.ctrlKey) {
         switch (e.key) {
           case "1":
             e.preventDefault();
@@ -70,7 +70,7 @@ export const CommandMenu = ({
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [open]);
 
   const fetchRewards = async () => {
     if (!session?.djangoAccessToken) return;
@@ -141,20 +141,20 @@ export const CommandMenu = ({
       open={open}
       onOpenChange={setOpen}
       label="Propel2Excel Command Menu"
-      className="fixed inset-0 bg-stone-950/50"
+      className="fixed inset-0 bg-stone-950/50 z-50"
       onClick={() => setOpen(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-lg shadow-xl border-stone-300 border overflow-hidden w-full max-w-lg mx-auto mt-12"
+        className="bg-white rounded-xl shadow-2xl border-stone-200 border overflow-hidden w-full max-w-lg mx-auto mt-12"
       >
         <Command.Input
           value={value}
           onValueChange={setValue}
           placeholder="Search rewards, navigate, or get help..."
-          className="relative border-b border-stone-300 p-3 text-lg w-full placeholder:text-stone-400 focus:outline-none"
+          className="relative border-b border-stone-200 p-4 text-lg w-full placeholder:text-stone-400 placeholder:font-normal placeholder:tracking-wide focus:outline-none bg-transparent"
         />
-        <Command.List className="max-h-96 overflow-y-auto p-3">
+        <Command.List className="max-h-96 overflow-y-auto p-4">
           <Command.Empty>
             <div className="flex flex-col items-center py-8 text-stone-500">
               <FiSearch className="w-8 h-8 mb-2" />
@@ -164,78 +164,82 @@ export const CommandMenu = ({
             </div>
           </Command.Empty>
 
-          <Command.Group heading="Navigation" className="text-sm mb-3 text-stone-400">
+          <Command.Group heading="Navigation" className="text-sm mb-2 text-stone-500 font-medium px-1">
             <Command.Item 
               onSelect={() => handleNavigation("/dashboard")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiHome />
+              <FiHome className="w-4 h-4" />
               <span>Dashboard</span>
               <span className="ml-auto text-xs text-stone-400">⌘1</span>
             </Command.Item>
             <Command.Item 
               onSelect={() => handleNavigation("/rewards")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiGift />
+              <FiGift className="w-4 h-4" />
               <span>Rewards</span>
               <span className="ml-auto text-xs text-stone-400">⌘2</span>
             </Command.Item>
             <Command.Item 
               onSelect={() => handleNavigation("/leaderboard")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiAward />
+              <FiAward className="w-4 h-4" />
               <span>Leaderboard</span>
               <span className="ml-auto text-xs text-stone-400">⌘3</span>
             </Command.Item>
             <Command.Item 
               onSelect={() => handleNavigation("/profile")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiUser />
+              <FiUser className="w-4 h-4" />
               <span>Profile</span>
               <span className="ml-auto text-xs text-stone-400">⌘4</span>
             </Command.Item>
           </Command.Group>
 
-          <Command.Group heading="Quick Actions" className="text-sm mb-3 text-stone-400">
+          <div className="my-3"></div>
+
+          <Command.Group heading="Quick Actions" className="text-sm mb-2 text-stone-500 font-medium px-1">
             <Command.Item 
               onSelect={() => handleNavigation("/rewards")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiAward />
+              <FiAward className="w-4 h-4" />
               <span>Redeem Points</span>
               <span className="ml-auto text-xs text-stone-400">Points → Rewards</span>
             </Command.Item>
             <Command.Item 
               onSelect={() => handleNavigation("/leaderboard")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiTrendingUp />
+              <FiTrendingUp className="w-4 h-4" />
               <span>View Rankings</span>
               <span className="ml-auto text-xs text-stone-400">See your position</span>
             </Command.Item>
             <Command.Item 
               onSelect={() => handleNavigation("/dashboard")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiActivity />
+              <FiActivity className="w-4 h-4" />
               <span>Recent Activity</span>
               <span className="ml-auto text-xs text-stone-400">View points history</span>
             </Command.Item>
           </Command.Group>
 
+          <div className="my-3"></div>
+
           {/* Searchable Rewards */}
           {rewards.length > 0 && (
-            <Command.Group heading="Rewards" className="text-sm mb-3 text-stone-400">
+            <Command.Group heading="Rewards" className="text-sm mb-2 text-stone-500 font-medium px-1">
               {rewards.slice(0, 8).map((reward) => (
                 <Command.Item
                   key={reward.id}
                   onSelect={() => handleRewardSelect(reward)}
-                  className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+                  className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
                 >
-                  <FiStar />
+                  <FiStar className="w-4 h-4" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{reward.name}</div>
                     <div className="text-xs text-stone-500 truncate">
@@ -249,9 +253,9 @@ export const CommandMenu = ({
               {rewards.length > 8 && (
                 <Command.Item 
                   onSelect={() => handleNavigation("/rewards")}
-                  className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+                  className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
                 >
-                  <FiGift />
+                  <FiGift className="w-4 h-4" />
                   <span>View All Rewards ({rewards.length})</span>
                   <span className="ml-auto text-xs text-stone-400">→</span>
                 </Command.Item>
@@ -259,47 +263,22 @@ export const CommandMenu = ({
             </Command.Group>
           )}
 
-          <Command.Group heading="Rewards Categories" className="text-sm mb-3 text-stone-400">
-            <Command.Item 
-              onSelect={() => handleNavigation("/rewards?category=merchandise")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
-            >
-              <FiGift />
-              <span>Merchandise</span>
-              <span className="ml-auto text-xs text-stone-400">Physical items</span>
-            </Command.Item>
-            <Command.Item 
-              onSelect={() => handleNavigation("/rewards?category=experiences")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
-            >
-              <FiAward />
-              <span>Experiences</span>
-              <span className="ml-auto text-xs text-stone-400">Events & activities</span>
-            </Command.Item>
-            <Command.Item 
-              onSelect={() => handleNavigation("/rewards?category=digital")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
-            >
-              <FiExternalLink />
-              <span>Digital Rewards</span>
-              <span className="ml-auto text-xs text-stone-400">Online perks</span>
-            </Command.Item>
-          </Command.Group>
+          <div className="my-3"></div>
 
-          <Command.Group heading="Account" className="text-sm mb-3 text-stone-400">
+          <Command.Group heading="Account" className="text-sm mb-2 text-stone-500 font-medium px-1">
             <Command.Item 
               onSelect={() => handleNavigation("/profile")}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-950 hover:bg-stone-200 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-950 hover:bg-stone-100 rounded-lg items-center gap-3 data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-950"
             >
-              <FiSettings />
+              <FiSettings className="w-4 h-4" />
               <span>Account Settings</span>
               <span className="ml-auto text-xs text-stone-400">Manage profile</span>
             </Command.Item>
             <Command.Item 
               onSelect={handleSignOut}
-              className="flex cursor-pointer transition-colors p-2 text-sm text-stone-50 hover:bg-stone-700 bg-stone-950 rounded items-center gap-2"
+              className="flex cursor-pointer transition-colors p-2.5 text-sm text-stone-50 hover:bg-red-50 hover:text-red-600 bg-stone-950 rounded-lg items-center gap-3 data-[selected=true]:bg-red-50 data-[selected=true]:text-red-600"
             >
-              <FiLogOut />
+              <FiLogOut className="w-4 h-4" />
               <span>Sign Out</span>
               <span className="ml-auto text-xs text-stone-300">
                 {session?.user?.email}
