@@ -33,10 +33,10 @@ export function PasswordChangeForm() {
         const response = await apiService.getDiscordVerificationStatus(session.djangoAccessToken);
         if (response.data) {
           setDiscordStatus(response.data);
-          if (response.data.discord_id) {
+          if (response.data?.discord_id) {
             setFormData(prev => ({
               ...prev,
-              discord_id: response.data.discord_id || ''
+              discord_id: response.data?.discord_id || ''
             }));
           }
         }

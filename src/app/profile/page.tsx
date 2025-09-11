@@ -22,8 +22,6 @@ export default function ProfilePage() {
 
   // Update current user when profile is updated
   const handleProfileUpdate = (updatedUser: User) => {
-    console.log('Parent: handleProfileUpdate called with:', updatedUser);
-    console.log('Parent: updatedUser.media_consent:', updatedUser.media_consent);
     setCurrentUser(updatedUser);
   };
 

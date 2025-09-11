@@ -31,8 +31,6 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
   // Update form data when user prop changes (e.g., after profile update)
   // But completely isolate media_consent to avoid conflicts
   useEffect(() => {
-    console.log('useEffect triggered - user.media_consent:', user.media_consent, 'isUpdatingConsent:', isUpdatingConsent);
-    
     setFormData(prev => ({
       first_name: user.first_name || '',
       last_name: user.last_name || '',
@@ -44,14 +42,11 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
     
     // Only update mediaConsentState if we're not in the middle of an update
     if (!isUpdatingConsent) {
-      console.log('Updating mediaConsentState from user prop:', user.media_consent);
       setMediaConsentState(user.media_consent || false);
       setFormData(prev => ({
         ...prev,
         media_consent: user.media_consent || false,
       }));
-    } else {
-      console.log('Skipping mediaConsentState update - currently updating');
     }
   }, [user, isUpdatingConsent]);
 
@@ -157,14 +152,8 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
       } else if (response.data) {
         setSuccess(`Media consent ${newConsent ? 'granted' : 'withdrawn'} successfully!`);
         
-        // Debug: Log the backend response
-        console.log('Backend response for media consent:', response.data);
-        console.log('Backend media_consent value:', response.data.media_consent);
-        
         // Extract the actual user data from the nested response
         const userData = (response.data as any).data || response.data;
-        console.log('Extracted user data:', userData);
-        console.log('Extracted media_consent:', userData.media_consent);
         
         // Keep the optimistic update in place - don't override it
         setMediaConsentState(newConsent);
