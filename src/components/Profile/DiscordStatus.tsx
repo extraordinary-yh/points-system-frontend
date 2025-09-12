@@ -117,7 +117,7 @@ export function DiscordStatus({ user }: DiscordStatusProps) {
       
       <div className="space-y-4">
         {/* Overall Status */}
-        <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
+        <div className="profile-field flex items-center justify-between p-4 bg-stone-50 rounded-lg">
           <div className="flex items-center">
             {getStatusIcon()}
             <span className="ml-2 font-medium text-stone-900">
@@ -142,7 +142,7 @@ export function DiscordStatus({ user }: DiscordStatusProps) {
 
         {/* Success Message for Verified Users */}
         {(discordStatus?.discord_verified || user.discord_verified) && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4">
+          <div className="profile-field bg-green-50 border border-green-200 rounded-md p-4">
             <p className="text-sm text-green-800">
               All your activities on Discord and points earned are now correctly reflected here in your dashboard.
             </p>

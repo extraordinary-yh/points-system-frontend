@@ -6,7 +6,9 @@ export const Dashboard = () => {
   return (
     <>
       <TopBar />
-      <Grid />
+      <div className="content-fade-in-scale">
+        <Grid />
+      </div>
     </>
   );
 };

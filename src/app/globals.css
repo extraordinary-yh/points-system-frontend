@@ -14,6 +14,17 @@
   }
 }
 
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeInLeft {
   from {
     opacity: 0;
@@ -50,7 +61,7 @@
 /* Base fade-in class - applied to all elements by default */
 .fade-in {
   opacity: 0;
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.3s ease-out forwards;
 }
 
 /* Staggered animation delays */
@@ -89,35 +100,35 @@
 /* Different animation directions */
 .fade-in-left {
   opacity: 0;
-  animation: fadeInLeft 0.6s ease-out forwards;
+  animation: fadeInLeft 0.3s ease-out forwards;
 }
 
 .fade-in-right {
   opacity: 0;
-  animation: fadeInRight 0.6s ease-out forwards;
+  animation: fadeInRight 0.3s ease-out forwards;
 }
 
 .fade-in-scale {
   opacity: 0;
-  animation: fadeInScale 0.6s ease-out forwards;
+  animation: fadeInScale 0.3s ease-out forwards;
 }
 
 /* Faster animations for smaller elements */
 .fade-in-fast {
   opacity: 0;
-  animation: fadeInUp 0.4s ease-out forwards;
+  animation: fadeInUp 0.2s ease-out forwards;
 }
 
 /* Slower animations for important elements */
 .fade-in-slow {
   opacity: 0;
-  animation: fadeInUp 0.8s ease-out forwards;
+  animation: fadeInUp 0.4s ease-out forwards;
 }
 
 /* Content fade-in animations - only for content inside pages */
 .content-fade-in {
   opacity: 0;
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.3s ease-out forwards;
 }
 
 /* Different fade-in animation styles for experimentation */
@@ -125,55 +136,55 @@
 /* 1. Fade in from left */
 .content-fade-in-left {
   opacity: 0;
-  animation: fadeInLeft 0.6s ease-out forwards;
+  animation: fadeInLeft 0.3s ease-out forwards;
 }
 
 /* 2. Fade in from right */
 .content-fade-in-right {
   opacity: 0;
-  animation: fadeInRight 0.6s ease-out forwards;
+  animation: fadeInRight 0.3s ease-out forwards;
 }
 
 /* 3. Scale up fade in */
 .content-fade-in-scale {
   opacity: 0;
-  animation: fadeInScale 0.6s ease-out forwards;
+  animation: fadeInScale 0.3s ease-out forwards;
 }
 
 /* 4. Bounce fade in */
 .content-fade-in-bounce {
   opacity: 0;
-  animation: fadeInBounce 0.8s ease-out forwards;
+  animation: fadeInBounce 0.4s ease-out forwards;
 }
 
 /* 5. Slide up with spring */
 .content-fade-in-spring {
   opacity: 0;
-  animation: fadeInSpring 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation: fadeInSpring 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
 /* 6. Fade in with rotation */
 .content-fade-in-rotate {
   opacity: 0;
-  animation: fadeInRotate 0.6s ease-out forwards;
+  animation: fadeInRotate 0.3s ease-out forwards;
 }
 
 /* 7. Fade in with blur effect */
 .content-fade-in-blur {
   opacity: 0;
   filter: blur(10px);
-  animation: fadeInBlur 0.8s ease-out forwards;
+  animation: fadeInBlur 0.6s ease-out forwards;
 }
 
 /* 8. Staggered children fade in */
 .content-fade-in-stagger {
   opacity: 0;
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.3s ease-out forwards;
 }
 
 .content-fade-in-stagger > * {
   opacity: 0;
-  animation: fadeInUp 0.5s ease-out forwards;
+  animation: fadeInUp 0.25s ease-out forwards;
 }
 
 .content-fade-in-stagger > *:nth-child(1) { animation-delay: 0.1s; }
@@ -251,7 +262,7 @@
 /* Keep the old fade-in class for backward compatibility */
 .fade-in {
   opacity: 0;
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.3s ease-out forwards;
 }
 
 /* Explicitly exclude sidebar from all animations */
@@ -264,73 +275,99 @@ nav[role="navigation"] {
   animation: none !important;
 }
 
-/* Apply to dashboard grid items */
-.grid > * {
+/* Removed automatic global animations - now only applied selectively where needed */
+
+/* Specific animation for rewards cards - fade in from left one by one */
+.rewards-grid > * {
   opacity: 0;
-  animation: fadeInScale 0.5s ease-out forwards;
+  animation: fadeInLeft 0.3s ease-out forwards;
 }
 
-.grid > *:nth-child(1) { animation-delay: 0.1s; }
-.grid > *:nth-child(2) { animation-delay: 0.2s; }
-.grid > *:nth-child(3) { animation-delay: 0.3s; }
-.grid > *:nth-child(4) { animation-delay: 0.4s; }
-.grid > *:nth-child(5) { animation-delay: 0.5s; }
-.grid > *:nth-child(6) { animation-delay: 0.6s; }
-.grid > *:nth-child(7) { animation-delay: 0.7s; }
-.grid > *:nth-child(8) { animation-delay: 0.8s; }
+.rewards-grid > *:nth-child(1) { animation-delay: 0.1s; }
+.rewards-grid > *:nth-child(2) { animation-delay: 0.2s; }
+.rewards-grid > *:nth-child(3) { animation-delay: 0.3s; }
+.rewards-grid > *:nth-child(4) { animation-delay: 0.4s; }
+.rewards-grid > *:nth-child(5) { animation-delay: 0.5s; }
+.rewards-grid > *:nth-child(6) { animation-delay: 0.6s; }
+.rewards-grid > *:nth-child(7) { animation-delay: 0.7s; }
+.rewards-grid > *:nth-child(8) { animation-delay: 0.8s; }
+.rewards-grid > *:nth-child(9) { animation-delay: 0.9s; }
+.rewards-grid > *:nth-child(10) { animation-delay: 1.0s; }
 
-/* Apply to card elements */
-.glass-card {
+/* Specific animations for leaderboard and profile pages - scale up */
+.leaderboard-content {
   opacity: 0;
-  animation: fadeInScale 0.6s ease-out forwards;
+  animation: fadeInScale 0.3s ease-out forwards;
 }
 
-/* Apply to list items */
-ul > li, ol > li {
+.profile-content {
   opacity: 0;
-  animation: fadeInLeft 0.5s ease-out forwards;
+  animation: fadeInScale 0.3s ease-out forwards;
 }
 
-ul > li:nth-child(1), ol > li:nth-child(1) { animation-delay: 0.1s; }
-ul > li:nth-child(2), ol > li:nth-child(2) { animation-delay: 0.2s; }
-ul > li:nth-child(3), ol > li:nth-child(3) { animation-delay: 0.3s; }
-ul > li:nth-child(4), ol > li:nth-child(4) { animation-delay: 0.4s; }
-ul > li:nth-child(5), ol > li:nth-child(5) { animation-delay: 0.5s; }
-ul > li:nth-child(6), ol > li:nth-child(6) { animation-delay: 0.6s; }
-ul > li:nth-child(7), ol > li:nth-child(7) { animation-delay: 0.7s; }
-ul > li:nth-child(8), ol > li:nth-child(8) { animation-delay: 0.8s; }
+/* Specific animation for redemption history table rows - fade in from left */
+.redemption-table tbody > tr {
+  opacity: 0;
+  animation: fadeInLeft 0.3s ease-out forwards;
+}
 
-/* Apply to table rows */
-tbody > tr {
+.redemption-table tbody > tr:nth-child(1) { animation-delay: 0.1s; }
+.redemption-table tbody > tr:nth-child(2) { animation-delay: 0.15s; }
+.redemption-table tbody > tr:nth-child(3) { animation-delay: 0.2s; }
+.redemption-table tbody > tr:nth-child(4) { animation-delay: 0.25s; }
+.redemption-table tbody > tr:nth-child(5) { animation-delay: 0.3s; }
+.redemption-table tbody > tr:nth-child(6) { animation-delay: 0.35s; }
+.redemption-table tbody > tr:nth-child(7) { animation-delay: 0.4s; }
+.redemption-table tbody > tr:nth-child(8) { animation-delay: 0.45s; }
+.redemption-table tbody > tr:nth-child(9) { animation-delay: 0.5s; }
+.redemption-table tbody > tr:nth-child(10) { animation-delay: 0.55s; }
+
+/* Individual form field blur animations for profile */
+.profile-field {
+  opacity: 0;
+  filter: blur(8px);
+  animation: fadeInBlur 0.5s ease-out forwards;
+}
+
+.profile-field:nth-child(1) { animation-delay: 0.1s; }
+.profile-field:nth-child(2) { animation-delay: 0.2s; }
+.profile-field:nth-child(3) { animation-delay: 0.3s; }
+.profile-field:nth-child(4) { animation-delay: 0.4s; }
+.profile-field:nth-child(5) { animation-delay: 0.5s; }
+.profile-field:nth-child(6) { animation-delay: 0.6s; }
+
+/* Leaderboard component animations */
+.leaderboard-period-selector {
+  /* No animation - static */
+}
+
+.leaderboard-podium-card {
+  opacity: 0;
+  animation: fadeInDown 0.5s ease-out forwards;
+}
+
+.leaderboard-podium-card:nth-child(1) { animation-delay: 0.3s; } /* Silver (2nd place) - second */
+.leaderboard-podium-card:nth-child(2) { animation-delay: 0.2s; } /* Gold (1st place) - first */
+.leaderboard-podium-card:nth-child(3) { animation-delay: 0.4s; } /* Bronze (3rd place) - last */
+
+.leaderboard-table-row {
   opacity: 0;
   animation: fadeInLeft 0.4s ease-out forwards;
 }
 
-tbody > tr:nth-child(1) { animation-delay: 0.1s; }
-tbody > tr:nth-child(2) { animation-delay: 0.15s; }
-tbody > tr:nth-child(3) { animation-delay: 0.2s; }
-tbody > tr:nth-child(4) { animation-delay: 0.25s; }
-tbody > tr:nth-child(5) { animation-delay: 0.3s; }
-tbody > tr:nth-child(6) { animation-delay: 0.35s; }
-tbody > tr:nth-child(7) { animation-delay: 0.4s; }
-tbody > tr:nth-child(8) { animation-delay: 0.45s; }
-tbody > tr:nth-child(9) { animation-delay: 0.5s; }
-tbody > tr:nth-child(10) { animation-delay: 0.55s; }
+.leaderboard-table-row:nth-child(1) { animation-delay: 0.5s; }
+.leaderboard-table-row:nth-child(2) { animation-delay: 0.55s; }
+.leaderboard-table-row:nth-child(3) { animation-delay: 0.6s; }
+.leaderboard-table-row:nth-child(4) { animation-delay: 0.65s; }
+.leaderboard-table-row:nth-child(5) { animation-delay: 0.7s; }
+.leaderboard-table-row:nth-child(6) { animation-delay: 0.75s; }
+.leaderboard-table-row:nth-child(7) { animation-delay: 0.8s; }
 
-/* Apply to form elements */
-form > * {
+.leaderboard-current-user {
   opacity: 0;
   animation: fadeInUp 0.5s ease-out forwards;
+  animation-delay: 0.9s;
 }
-
-form > *:nth-child(1) { animation-delay: 0.1s; }
-form > *:nth-child(2) { animation-delay: 0.2s; }
-form > *:nth-child(3) { animation-delay: 0.3s; }
-form > *:nth-child(4) { animation-delay: 0.4s; }
-form > *:nth-child(5) { animation-delay: 0.5s; }
-form > *:nth-child(6) { animation-delay: 0.6s; }
-form > *:nth-child(7) { animation-delay: 0.7s; }
-form > *:nth-child(8) { animation-delay: 0.8s; }
 
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
@@ -340,15 +377,27 @@ form > *:nth-child(8) { animation-delay: 0.8s; }
   .fade-in-scale,
   .fade-in-fast,
   .fade-in-slow,
-  main > *,
-  .grid > *,
-  .glass-card,
-  ul > li,
-  ol > li,
-  tbody > tr,
-  form > * {
+  .content-fade-in,
+  .content-fade-in-left,
+  .content-fade-in-right,
+  .content-fade-in-scale,
+  .content-fade-in-bounce,
+  .content-fade-in-spring,
+  .content-fade-in-rotate,
+  .content-fade-in-blur,
+  .content-fade-in-stagger,
+  .rewards-grid > *,
+  .leaderboard-content,
+  .profile-content,
+  .redemption-table tbody > tr,
+  .profile-field,
+  .leaderboard-period-selector,
+  .leaderboard-podium-card,
+  .leaderboard-table-row,
+  .leaderboard-current-user {
     animation: none;
     opacity: 1;
+    filter: none;
   }
 }
 

@@ -35,9 +35,7 @@ export default function RewardsPage() {
     }`}>
       <Sidebar />
       <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto">
-        <div className="content-fade-in-scale">
-          <RewardsContent />
-        </div>
+        <RewardsContent />
       </div>
     </main>
   );
@@ -205,7 +203,7 @@ const RewardsContent = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Page Header - No Animation */}
       <div className="border-b px-4 my-4 pb-4 border-stone-200">
         <div className="flex items-center justify-between p-0.5">
           <div>
@@ -219,9 +217,11 @@ const RewardsContent = () => {
         </div>
       </div>
 
-      {/* Points Progress Bar */}
-      <div className="mx-6 p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Your Progress</h2>
+      {/* Content with Animation */}
+      <div className="content-fade-in-scale">
+        {/* Points Progress Bar */}
+        <div className="mx-6 p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">Your Progress</h2>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-slate-600">Current Points</span>
@@ -386,6 +386,7 @@ const RewardsContent = () => {
         )}
         </div>
       </div>
+      </div>
     </div>
   );
 };
@@ -520,7 +521,7 @@ const AvailableRewards = ({
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="rewards-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {rewardStatuses.map(({ reward, status }) => {
         const IconComponent = getRewardIcon(reward.name);
         const gradient = getRewardGradient(status);
@@ -721,7 +722,7 @@ const RedemptionHistory = ({ history }: { history: Redemption[] }) => {
 
       {/* Table */}
       <div className="overflow-hidden">
-        <table className="w-full">
+        <table className="redemption-table w-full">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="text-left py-4 px-6 text-sm font-medium text-gray-700">REWARD</th>

@@ -31,9 +31,7 @@ export default function DashboardPage() {
     }`}>
       <Sidebar />
       <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto">
-        <div className="content-fade-in-scale">
-          <Dashboard />
-        </div>
+        <Dashboard />
       </div>
     </main>
   );

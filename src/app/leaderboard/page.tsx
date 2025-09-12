@@ -206,8 +206,7 @@ const LeaderboardPage = () => {
     }`}>
       <Sidebar />
       <div className="bg-white rounded-lg shadow h-full overflow-y-auto">
-        <div className="content-fade-in">
-        {/* Page Header */}
+        {/* Page Header - No Animation */}
         <div className="border-b px-4 mt-4 pb-4 border-stone-200">
             <div className="flex items-center justify-between p-0.5">
               <div>
@@ -223,8 +222,11 @@ const LeaderboardPage = () => {
             </div>
           </div>
 
+        {/* Content with Animation */}
+        <div className="leaderboard-content">
+
         {/* Period Selector */}
-        <div className="mb-6">
+        <div className="leaderboard-period-selector mb-6">
           <div className="bg-white rounded-xl shadow-sm p-3">
             <div className="flex bg-gray-100 rounded-lg p-1">
               {[
@@ -263,7 +265,7 @@ const LeaderboardPage = () => {
             <div className="px-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
                 {/* 2nd Place - Silver Glow */}
-                <div className="lg:order-1 order-2">
+                <div className="leaderboard-podium-card lg:order-1 order-2">
                   <div className="relative bg-gradient-to-br from-slate-50 via-white to-slate-100 rounded-xl shadow-sm border border-slate-200/50 backdrop-blur-sm p-6 text-center transform hover:scale-105 transition-all duration-300 silver-glow hover:silver-glow-hover">
                     {/* Silver Glow Effect */}
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-silver-300 via-silver-200 to-silver-300 opacity-0 hover:opacity-30 transition-opacity duration-500 blur-sm"></div>
@@ -288,7 +290,7 @@ const LeaderboardPage = () => {
                 </div>
 
                 {/* 1st Place - Gold Glow */}
-                <div className="lg:order-2 order-1">
+                <div className="leaderboard-podium-card lg:order-2 order-1">
                   <div className="relative bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg shadow-lg border border-yellow-300 p-6 text-center transform hover:scale-105 transition-all duration-300 gold-glow hover:gold-glow-hover">
                     {/* Gold Glow Effect */}
                     <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 opacity-0 hover:opacity-30 transition-opacity duration-500 blur-sm"></div>
@@ -313,7 +315,7 @@ const LeaderboardPage = () => {
                 </div>
 
                 {/* 3rd Place - Bronze Glow */}
-                <div className="lg:order-3 order-3">
+                <div className="leaderboard-podium-card lg:order-3 order-3">
                   <div className="relative bg-gradient-to-br from-slate-50 via-white to-slate-100 rounded-xl shadow-sm border border-slate-200/50 backdrop-blur-sm p-6 text-center transform hover:scale-105 transition-all duration-300 bronze-glow hover:bronze-glow-hover">
                     {/* Bronze Glow Effect */}
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 opacity-0 hover:opacity-30 transition-opacity duration-500 blur-sm"></div>
@@ -382,7 +384,7 @@ const LeaderboardPage = () => {
                       {leaderboardData.leaderboard.slice(3, 10).map((entry, index) => (
                         <tr
                           key={entry.user_id}
-                          className={`transition-all duration-200 hover:bg-slate-50/50 ${
+                          className={`leaderboard-table-row transition-all duration-200 hover:bg-slate-50/50 ${
                             entry.is_current_user ? 'border-l-4 border-l-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.15)]' : index % 2 ? "bg-slate-50/30" : ""
                           }`}
                         >
@@ -456,7 +458,7 @@ const LeaderboardPage = () => {
                           </tr>
                           
                           {/* Current user row */}
-                          <tr className="bg-gradient-to-r from-blue-50/40 to-indigo-50/40 border-l-2 border-l-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:from-blue-50/60 hover:to-indigo-50/60 transition-all duration-300">
+                          <tr className="leaderboard-current-user bg-gradient-to-r from-blue-50/40 to-indigo-50/40 border-l-2 border-l-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:from-blue-50/60 hover:to-indigo-50/60 transition-all duration-300">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <span className="text-lg font-semibold text-blue-800">

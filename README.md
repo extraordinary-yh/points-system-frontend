@@ -1,4 +1,4 @@
-# 🚀 Propel2Excel Points System Frontend
+# 🚀 Gamification Points System Frontend
 
 A comprehensive full-stack student engagement platform built with Next.js, featuring gamified career development activities, points tracking, rewards redemption, and Discord integration. This system serves students, companies, universities, and nonprofits with a complete engagement ecosystem.
 

@@ -145,7 +145,7 @@ export function PasswordChangeForm() {
     }
   };
 
-  const PasswordInput = ({ 
+  const PasswordInput = ({
     name, 
     label, 
     value, 
@@ -160,7 +160,7 @@ export function PasswordChangeForm() {
     showPassword: boolean;
     onToggleVisibility: () => void;
   }) => (
-    <div>
+    <div className="profile-field">
       <label className="block text-sm font-medium text-stone-700 mb-1">
         {label}
       </label>
@@ -240,7 +240,7 @@ export function PasswordChangeForm() {
 
         {/* Discord ID (if required) */}
         {discordStatus?.verification_required && (
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Discord ID <span className="text-red-500">*</span>
             </label>
