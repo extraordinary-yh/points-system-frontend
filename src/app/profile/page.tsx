@@ -20,6 +20,7 @@ export default function ProfilePage() {
     }
   }, [userProfile, currentUser]);
 
+
   // Update current user when profile is updated
   const handleProfileUpdate = (updatedUser: User) => {
     setCurrentUser(updatedUser);
@@ -36,16 +37,32 @@ export default function ProfilePage() {
   }
 
   // useOnboardingCheck handles authentication and onboarding redirects
-  if (!userProfile?.onboarding_completed || !currentUser) {
+  if (!userProfile?.onboarding_completed) {
     return null;
   }
 
+  // Show loading state while user data is being prepared
+  if (!currentUser) {
+    return (
+      <main className={`grid gap-4 p-4 transition-all duration-300 h-screen ${
+        isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
+      }`}>
+        <Sidebar />
+        <div className="glass-card pb-4 h-full overflow-y-auto flex items-center justify-center">
+          <div className="text-xl text-stone-600">
+            Loading profile...
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className={`grid gap-4 p-4 transition-all duration-300 ${
+    <main className={`grid gap-4 p-4 transition-all duration-300 h-screen ${
       isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
     }`}>
       <Sidebar />
-      <div className="bg-white rounded-lg pb-4 shadow">
+      <div className="glass-card pb-4 h-full overflow-y-auto">
         {/* Header - Consistent with other pages */}
         <div className="border-b px-4 my-4 pb-4 border-stone-200">
           <div className="flex items-center justify-between p-0.5">
@@ -61,18 +78,20 @@ export default function ProfilePage() {
         </div>
         
         {/* Profile Content */}
-        <div className="px-4 space-y-6">
-          {/* Profile Form - Personal Information & Account Settings */}
-          <ProfileForm 
-            user={currentUser} 
-            onProfileUpdate={handleProfileUpdate}
-          />
-          
-          {/* Discord Integration Status */}
-          <DiscordStatus user={currentUser} />
-          
-          {/* Password Change Form */}
-          <PasswordChangeForm />
+        <div className="content-fade-in-blur">
+          <div className="px-4 space-y-6">
+            {/* Profile Form - Personal Information & Account Settings */}
+            <ProfileForm 
+              user={currentUser} 
+              onProfileUpdate={handleProfileUpdate}
+            />
+            
+            {/* Discord Integration Status */}
+            <DiscordStatus user={currentUser} />
+            
+            {/* Password Change Form */}
+            <PasswordChangeForm />
+          </div>
         </div>
       </div>
     </main>

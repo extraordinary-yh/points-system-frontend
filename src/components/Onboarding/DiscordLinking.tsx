@@ -33,7 +33,7 @@ export const DiscordLinking = ({ userName, onComplete }: DiscordLinkingProps) =>
             setDiscordId(response.data.discord_id);
           }
         } catch (error) {
-          console.error('Error checking initial link status:', error);
+          // Error checking initial link status
         }
       }
     };
@@ -83,7 +83,7 @@ export const DiscordLinking = ({ userName, onComplete }: DiscordLinkingProps) =>
           setLinkCode(null);
         }
       } catch (error) {
-        console.error('Error checking link status:', error);
+        // Error checking link status
       }
     };
 
@@ -131,11 +131,11 @@ export const DiscordLinking = ({ userName, onComplete }: DiscordLinkingProps) =>
       if (response.data) {
         setLinkCode(response.data);
       } else {
-        console.error('API Error:', response.error);
+        // API Error
         setError(response.error || 'Failed to generate verification code');
       }
     } catch (error) {
-      console.error('Network Error:', error);
+      // Network Error
       setError(error instanceof Error ? error.message : 'Failed to generate verification code');
     } finally {
       setLoading(false);
@@ -153,7 +153,7 @@ export const DiscordLinking = ({ userName, onComplete }: DiscordLinkingProps) =>
         setLinkCode(null);
       }
     } catch (error) {
-      console.error('Error checking link status:', error);
+      // Error checking link status
     }
   };
 

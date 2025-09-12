@@ -205,7 +205,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
       )}
 
       {/* Personal Information Section */}
-      <div className="bg-white border border-stone-200 rounded-lg p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-stone-900">Personal Information</h3>
           {!isEditing ? (
@@ -336,7 +336,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
       </div>
 
       {/* Account Settings Section */}
-      <div className="bg-white border border-stone-200 rounded-lg p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-stone-900">Account Settings</h3>
           {/* Media Consent Status - positioned with header */}
@@ -398,7 +398,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
       </div>
 
       {/* Read-only Account Information */}
-      <div className="bg-stone-50 border border-stone-200 rounded-lg p-6">
+      <div className="glass-card-locked p-6">
         <h3 className="text-lg font-semibold text-stone-900 mb-4">Account Information</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

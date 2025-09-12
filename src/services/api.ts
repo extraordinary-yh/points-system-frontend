@@ -290,7 +290,6 @@ class ApiService {
     
     // Check if this exact request is already in progress
     if (this.requestCache.has(cacheKey)) {
-      console.log(`🔄 Deduplicating request: ${endpoint}`);
       return this.requestCache.get(cacheKey);
     }
     
@@ -354,7 +353,7 @@ class ApiService {
       if (Math.random() < 0.1) { // Only log 10% of requests
         const size = new Blob([JSON.stringify(data)]).size;
         const sizeKB = (size / 1024).toFixed(2);
-        console.log(`📦 ${endpoint}: ${sizeKB}KB, ${Array.isArray(data) ? data.length : 'non-array'} items`);
+        // Data received successfully
       }
 
       if (!response.ok) {
@@ -415,8 +414,7 @@ class ApiService {
       this.token = response.data.tokens.access;
       localStorage.setItem('authToken', this.token);
       localStorage.setItem('refreshToken', response.data.tokens.refresh);
-      console.log('✅ JWT Tokens stored successfully!');
-      console.log('✅ Access token:', this.token.substring(0, 20) + '...');
+      // JWT Tokens stored successfully
     }
 
     return response;
@@ -458,7 +456,7 @@ class ApiService {
       this.token = response.data.tokens.access;
       localStorage.setItem('authToken', this.token);
       localStorage.setItem('refreshToken', response.data.tokens.refresh);
-      console.log('✅ JWT Tokens stored successfully after registration!');
+      // JWT Tokens stored successfully after registration
     }
 
     return response;
@@ -498,7 +496,7 @@ class ApiService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('authToken');
       localStorage.removeItem('refreshToken');
-      console.log('🧹 Cleared potentially invalid tokens');
+      // Cleared potentially invalid tokens
     }
   }
 
@@ -523,7 +521,7 @@ class ApiService {
       const response = await this.request<{ valid: boolean }>('/users/profile/', {}, token);
       return response.data !== undefined && !response.error;
     } catch (error) {
-      console.warn('Token validation failed:', error);
+      // Token validation failed
       return false;
     }
   }

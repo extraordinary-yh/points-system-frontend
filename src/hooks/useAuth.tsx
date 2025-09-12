@@ -57,13 +57,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Check if we have user data but no token (broken state)
           const storedUser = localStorage.getItem('user');
           if (storedUser) {
-            console.log('Found stored user without token, clearing broken state');
+            // Found stored user without token, clearing broken state
             localStorage.removeItem('user');
             setUser(null);
           }
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error);
+        // Auth initialization failed
         apiService.logout();
         setUser(null);
       } finally {
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Listen for unauthorized errors from API service
     const handleUnauthorizedError = (event: CustomEvent) => {
-      console.log('🚨 Unauthorized error received, showing re-login prompt');
+      // Unauthorized error received, showing re-login prompt
       setShowReLoginPrompt(true);
       setUser(null);
     };
@@ -88,16 +88,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (credentials: { username: string; password: string }) => {
-    console.log('🔐 Starting login process...');
+    // Starting login process
     const response = await apiService.login(credentials);
-    console.log('🔐 Login response:', response);
+    // Login response received
     
     if (response.data) {
-      console.log('✅ Login successful! Raw response:', response.data);
-      console.log('✅ User data:', response.data.user);
-      console.log('✅ Tokens received:', !!response.data.tokens);
-      console.log('✅ Access token preview:', response.data.tokens?.access ? response.data.tokens.access.substring(0, 20) + '...' : 'none');
-      console.log('✅ Response keys:', Object.keys(response.data));
+      // Login successful
       
       setUser(response.data.user);
       // Store user data as backup
@@ -105,12 +101,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Verify token was saved
       setTimeout(() => {
-        console.log('🔍 Verifying token after login:');
-        console.log('localStorage authToken:', localStorage.getItem('authToken'));
-        console.log('apiService.isAuthenticated():', apiService.isAuthenticated());
+        // Verifying token after login
       }, 100);
     } else {
-      console.error('❌ Login failed:', response.error);
+      // Login failed
       throw new Error(response.error || 'Login failed');
     }
   };

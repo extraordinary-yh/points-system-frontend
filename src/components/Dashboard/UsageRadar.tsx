@@ -38,7 +38,10 @@ export const UsageRadar = () => {
   const enrichedCategoryData = categoryData;
 
   return (
-    <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col">
+    <div 
+      className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col"
+      data-section="lifetime-chart"
+    >
       {/* Modern header with glassmorphism effect */}
       <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm border-b border-slate-200/50">
         <div className="flex items-center justify-between">

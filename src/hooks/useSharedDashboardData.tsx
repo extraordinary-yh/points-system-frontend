@@ -119,7 +119,6 @@ let processedDataCacheVersion = -1;
 
 // Export function to trigger dashboard refresh from external components
 export const refreshDashboardData = async (force: boolean = false) => {
-  console.log('🔄 refreshDashboardData called with force:', force);
   if (globalRefreshFunction) {
     console.log('🔄 Executing global refresh function');
     await globalRefreshFunction(force);
@@ -131,13 +130,13 @@ export const refreshDashboardData = async (force: boolean = false) => {
 // Debug function to force refresh from browser console
 if (typeof window !== 'undefined') {
   (window as any).forceDashboardRefresh = () => {
-    console.log('🧪 Manual dashboard refresh triggered from console');
+    // Manual dashboard refresh triggered from console
     return refreshDashboardData(true);
   };
   
   // Add immediate refresh function for testing
   (window as any).refreshNow = async () => {
-    console.log('🚀 IMMEDIATE REFRESH - clearing all cache and fetching fresh data');
+    // IMMEDIATE REFRESH - clearing all cache and fetching fresh data
     
     // Clear all cache data
     globalCache.lastFetch = null;
@@ -172,7 +171,7 @@ if (typeof window !== 'undefined') {
   
   // Add nuclear option - completely reset everything
   (window as any).nuclearRefresh = () => {
-    console.log('☢️ NUCLEAR REFRESH - completely resetting everything');
+    // NUCLEAR REFRESH - completely resetting everything
     
     // Reset global cache object completely
     globalCache = {
@@ -203,41 +202,15 @@ if (typeof window !== 'undefined') {
     return 'Nuclear refresh initiated - page will reload';
   };
 
-  // 🐛 DEBUG: Helper function to compare data freshness
+  // Debug function to compare data freshness
   (window as any).debugPointTracker = () => {
-    console.log('🔍 POINT TRACKER DEBUG COMPARISON');
-    
     const timeline = globalCache.timelineData?.timeline;
     const activityFeed = globalCache.activityFeed?.feed;
     const todayStr = new Date().toISOString().split('T')[0];
     
-    console.log('📊 Timeline Data:', {
-      hasData: !!timeline,
-      entries: timeline?.length || 0,
-      latestDate: timeline?.[timeline.length - 1]?.date,
-      latestPoints: timeline?.[timeline.length - 1]?.points_earned,
-      latestCumulative: timeline?.[timeline.length - 1]?.cumulative_points,
-      todaysEntry: timeline?.find(entry => entry.date === todayStr),
-      isLatestToday: timeline?.[timeline.length - 1]?.date === todayStr
-    });
-    
     const todaysActivities = activityFeed?.filter(item => 
       item.timestamp.startsWith(todayStr) && item.type === 'activity'
     ) || [];
-    
-    console.log('📰 Activity Feed Data:', {
-      hasData: !!activityFeed,
-      totalItems: activityFeed?.length || 0,
-      latestActivity: activityFeed?.[0],
-      todaysActivities: todaysActivities.length,
-      todaysPoints: todaysActivities.reduce((sum, item) => sum + item.points_change, 0),
-      lastFetch: globalCache.lastFetch ? new Date(globalCache.lastFetch).toLocaleTimeString() : 'never'
-    });
-    
-    console.log('🎯 Backend Total Points:', {
-      userProfile: globalCache.userProfile?.total_points,
-      dashboardStats: globalCache.dashboardStats?.current_period?.total_points
-    });
     
     return {
       timeline: timeline?.length || 0,
@@ -249,43 +222,20 @@ if (typeof window !== 'undefined') {
 
   // 🐛 DEBUG: Helper function to analyze activity feed for negative points
   (window as any).debugActivityFeed = () => {
-    console.log('🔍 ACTIVITY FEED ANALYSIS');
-    
     const activityFeed = globalCache.activityFeed?.feed;
     if (!activityFeed) {
-      console.log('❌ No activity feed data available');
-      return;
+      return null;
     }
     
     const activities = activityFeed.filter(item => item.type === 'activity');
     const redemptions = activityFeed.filter(item => item.type === 'redemption');
     
-    console.log('📊 Activity Feed Breakdown:', {
+    return {
       totalItems: activityFeed.length,
       activities: activities.length,
       redemptions: redemptions.length,
       activityPoints: activities.reduce((sum, item) => sum + item.points_change, 0),
       redemptionPoints: redemptions.reduce((sum, item) => sum + item.points_change, 0), // Should be negative
-      netPoints: activities.reduce((sum, item) => sum + item.points_change, 0) + redemptions.reduce((sum, item) => sum + item.points_change, 0)
-    });
-    
-    // Show recent activities and redemptions
-    console.log('📈 Recent Activities (last 5):', activities.slice(0, 5).map(item => ({
-      timestamp: item.timestamp,
-      points: item.points_change,
-      description: item.description
-    })));
-    
-    console.log('🎁 Recent Redemptions (last 5):', redemptions.slice(0, 5).map(item => ({
-      timestamp: item.timestamp,
-      points: item.points_change,
-      description: item.description
-    })));
-    
-    return {
-      totalItems: activityFeed.length,
-      activities: activities.length,
-      redemptions: redemptions.length,
       netPoints: activities.reduce((sum, item) => sum + item.points_change, 0) + redemptions.reduce((sum, item) => sum + item.points_change, 0)
     };
   };
@@ -320,7 +270,7 @@ export const useSharedDashboardData = () => {
         clearTimeout(timeout);
         timeout = setTimeout(async () => {
           if (mounted) {
-            console.log('🔄 Page became visible, fetching fresh data');
+            // Page became visible, fetching fresh data
             await fetchData(session.djangoAccessToken);
           }
         }, 100);
@@ -333,7 +283,7 @@ export const useSharedDashboardData = () => {
         clearTimeout(timeout);
         timeout = setTimeout(async () => {
           if (mounted) {
-            console.log('🔄 Window focused, fetching fresh data');
+            // Window focused, fetching fresh data
             await fetchData(session.djangoAccessToken);
           }
         }, 100);
@@ -370,11 +320,11 @@ export const useSharedDashboardData = () => {
   const fetchData = async (token: string): Promise<void> => {
     // Check if same fetch is already in progress
     if (currentFetchPromise && lastFetchToken === token) {
-      console.log('🔄 Fetch already in progress, waiting for completion');
+      // Fetch already in progress, waiting for completion
       return currentFetchPromise;
     }
 
-    console.log('🔄 fetchData called for dashboard data - immediate execution');
+    // fetchData called for dashboard data - immediate execution
 
     // Create new fetch promise
     currentFetchPromise = executeFetch(token);
@@ -430,19 +380,7 @@ export const useSharedDashboardData = () => {
           item.timestamp.startsWith(todayStr) && item.type === 'activity'
         );
         
-        console.log('✅ Activity feed loaded', {
-          totalItems: activityFeedResponse.data.feed.length,
-          totalActivities: activityFeedResponse.data.total_activities,
-          totalRedemptions: activityFeedResponse.data.total_redemptions,
-          latestActivity: latestActivity ? {
-            timestamp: latestActivity.timestamp,
-            type: latestActivity.type,
-            points: latestActivity.points_change,
-            description: latestActivity.description
-          } : null,
-          todaysActivities: todaysActivities.length,
-          todaysPoints: todaysActivities.reduce((sum, item) => sum + item.points_change, 0)
-        });
+        // Activity feed loaded successfully
       }
 
       // Handle timeline response
@@ -458,23 +396,7 @@ export const useSharedDashboardData = () => {
         const latestEntry = timeline[timeline.length - 1];
         const secondLatest = timeline[timeline.length - 2];
         
-        console.log('✅ Timeline data loaded', {
-          totalEntries: timeline.length,
-          dateRange: `${timeline[0]?.date} to ${latestEntry?.date}`,
-          latestEntry: {
-            date: latestEntry?.date,
-            points_earned: latestEntry?.points_earned,
-            cumulative: latestEntry?.cumulative_points,
-            activities: latestEntry?.activities_count,
-            isToday: latestEntry?.date === new Date().toISOString().split('T')[0]
-          },
-          secondLatest: secondLatest ? {
-            date: secondLatest.date,
-            points_earned: secondLatest.points_earned,
-            cumulative: secondLatest.cumulative_points
-          } : null,
-          todaysDate: new Date().toISOString().split('T')[0]
-        });
+        // Timeline data loaded successfully
       }
 
       // Handle dashboard stats response
@@ -482,7 +404,7 @@ export const useSharedDashboardData = () => {
         console.warn('Failed to fetch dashboard stats:', dashboardStatsResponse.error);
       } else if (dashboardStatsResponse.data) {
         globalCache.dashboardStats = dashboardStatsResponse.data;
-        console.log('✅ Dashboard stats loaded - Total Points:', dashboardStatsResponse.data.current_period?.total_points);
+        // Dashboard stats loaded successfully
       }
 
       // Handle rewards response  
@@ -492,7 +414,7 @@ export const useSharedDashboardData = () => {
         globalCache.availableRewards = Array.isArray(rewardsResponse.data) 
           ? rewardsResponse.data 
           : (rewardsResponse.data as any).rewards || [];
-        console.log('✅ Available rewards:', globalCache.availableRewards?.length || 0);
+        // Available rewards loaded successfully
       }
 
       // NEW: Handle user profile response for total_points
@@ -501,7 +423,7 @@ export const useSharedDashboardData = () => {
       } else if (userProfileResponse.data) {
         // Store user profile data for total_points
         globalCache.userProfile = userProfileResponse.data;
-        console.log('✅ User profile loaded - Total Points:', userProfileResponse.data.total_points);
+        // User profile loaded successfully
       }
 
       globalCache.error = hasError ? errorMessage : null;
@@ -509,7 +431,7 @@ export const useSharedDashboardData = () => {
 
     } catch (error) {
       globalCache.error = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Dashboard data fetch error:', error);
+      // Dashboard data fetch error
     } finally {
       globalCache.isLoading = false;
       
@@ -660,7 +582,7 @@ export const useSharedDashboardData = () => {
       
         // Reduced logging - only log occasionally
     if (Math.random() < 0.1) {
-      console.log(`📊 Backend total_points: ${totalPoints}`);
+      // Backend total_points retrieved
     }
 
     const processedData = {
@@ -682,10 +604,10 @@ export const useSharedDashboardData = () => {
 
   // Force refresh function
   const refresh = async (force: boolean = false) => {
-    console.log('🔄 refresh called with force:', force, 'session available:', !!session?.djangoAccessToken);
+    // refresh called with force
     if (session?.djangoAccessToken) {
       // Clear global cache to ensure truly fresh data
-      console.log('🔄 Clearing cache and fetching fresh data');
+      // Clearing cache and fetching fresh data
       globalCache.lastFetch = null;
       globalCache.activityFeed = null;
       globalCache.timelineData = null;
@@ -741,7 +663,7 @@ export const useSharedDashboardData = () => {
     // Increment cache version to force invalidation
     cacheVersion++;
     // Since we're not caching anymore, this just resets the data
-    console.log('🧹 Data reset, next load will fetch fresh data');
+    // Data reset, next load will fetch fresh data
     notifySubscribers();
   };
 

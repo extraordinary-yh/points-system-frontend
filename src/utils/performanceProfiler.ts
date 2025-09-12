@@ -15,7 +15,7 @@ export class PerformanceProfiler {
     
     // Color coding for performance analysis
     const color = duration < 100 ? '🟢' : duration < 500 ? '🟡' : '🔴';
-    console.log(`${color} ${label}: ${duration.toFixed(2)}ms`);
+    // Performance measurement completed
     
     return duration;
   }
@@ -54,10 +54,10 @@ export class PerformanceProfiler {
       totalTime += time;
       const percentage = ((time / Object.values(this.timings).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
       const color = time < 100 ? '🟢' : time < 500 ? '🟡' : '🔴';
-      console.log(`${color} ${label}: ${time.toFixed(2)}ms (${percentage}%)`);
+      // Performance measurement with percentage
     });
     
-    console.log(`🎯 Total measured time: ${totalTime.toFixed(2)}ms`);
+    // Total measured time calculated
     console.groupEnd();
   }
 
@@ -74,9 +74,7 @@ export class NetworkAnalyzer {
     const sizeKB = (size / 1024).toFixed(2);
     
     console.group(`🌐 Network Analysis: ${url}`);
-    console.log(`📦 Response size: ${sizeKB}KB (${size} bytes)`);
-    console.log(`⚡ Status: ${response.status} ${response.statusText}`);
-    console.log(`🕒 Response headers:`, response.headers.get('content-type'));
+    // Response size and status analyzed
     
     if (Array.isArray(data)) {
       const avgSize = size / data.length;
@@ -92,7 +90,7 @@ export class NetworkAnalyzer {
       const sampleItem = Array.isArray(data) ? data[0] : data;
       if (sampleItem) {
         const fields = Object.keys(sampleItem);
-        console.log(`🔍 Data fields (${fields.length}):`, fields);
+        // Data fields analyzed
         
         // Check for potentially unused heavy fields
         const heavyFields = fields.filter(field => {
@@ -114,7 +112,7 @@ export class NetworkAnalyzer {
 export class DatabaseProfiler {
   static logSlowQuery(queryName: string, duration: number, recordCount: number) {
     const color = duration < 50 ? '🟢' : duration < 200 ? '🟡' : '🔴';
-    console.log(`${color} DB Query [${queryName}]: ${duration}ms, ${recordCount} records`);
+    // DB Query performance measured
     
     if (duration > 200) {
       console.warn(`🐌 Slow query detected: ${queryName} took ${duration}ms`);

@@ -3,10 +3,12 @@ import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useOnboardingCheck } from "@/hooks/useOnboardingCheck";
+import { useSharedDashboardData } from "@/hooks/useSharedDashboardData";
 
 export default function DashboardPage() {
   const { userProfile, isLoading } = useOnboardingCheck();
   const { isCollapsed } = useSidebar();
+  const { isLoading: dataLoading, activityFeed, timelineData, dashboardStats } = useSharedDashboardData();
 
   if (isLoading) {
     return (
@@ -28,7 +30,11 @@ export default function DashboardPage() {
       isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
     }`}>
       <Sidebar />
-      <Dashboard />
+      <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto">
+        <div className="content-fade-in-scale">
+          <Dashboard />
+        </div>
+      </div>
     </main>
   );
 }

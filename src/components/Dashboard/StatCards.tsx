@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiTrendingDown, FiTrendingUp } from "react-icons/fi";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { DashboardStats } from "../../services/api";
 import { useSharedDashboardData } from "../../hooks/useSharedDashboardData";
 
@@ -20,6 +21,7 @@ export const refreshStatCards = async () => {
 
 export const StatCards = () => {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const { 
     totalPoints, 
     totalActivities, 
@@ -28,6 +30,43 @@ export const StatCards = () => {
     userProfile,
     isLoading: sharedDataLoading 
   } = useSharedDashboardData();
+
+  // Handle click on Activities Completed card - scroll to recent activity section
+  const handleActivitiesClick = () => {
+    const recentActivityElement = document.querySelector('[data-section="recent-activity"]');
+    if (recentActivityElement) {
+      recentActivityElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+  };
+
+  // Handle click on Available Rewards card - navigate to rewards page
+  const handleRewardsClick = () => {
+    router.push('/rewards');
+  };
+
+  // Handle click on Current Points card - scroll to Point Tracker and Lifetime Earnings Chart
+  const handlePointsClick = () => {
+    // Try to find the Point Tracker first (ActivityGraph component)
+    const pointTrackerElement = document.querySelector('[data-section="point-tracker"]');
+    if (pointTrackerElement) {
+      pointTrackerElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    } else {
+      // Fallback: try to find the Lifetime Earnings Chart (UsageRadar component)
+      const lifetimeChartElement = document.querySelector('[data-section="lifetime-chart"]');
+      if (lifetimeChartElement) {
+        lifetimeChartElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }
+  };
   
   // ✅ Data Priority (FIXED - backend total_points is most current and accurate):
   // 1. userProfile.total_points (backend API - most current and accurate)
@@ -40,6 +79,7 @@ export const StatCards = () => {
     totalPoints: 0,
     activitiesCompleted: 0,
     availableRewards: 0,
+    nextRewardInfo: null as { pointsNeeded: number; rewardName: string } | null,
     loading: true
   });
 
@@ -51,23 +91,14 @@ export const StatCards = () => {
       if (userProfile?.total_points !== undefined) {
         // Use backend total_points field (most current and accurate)
         userPoints = userProfile.total_points;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 StatCards: Using backend total_points (current):', userPoints);
-        }
+        // Using backend total_points (current)
       } else if (dashboardStats?.current_period?.total_points !== undefined) {
         // Fallback: dashboard stats (may be outdated)
         userPoints = dashboardStats.current_period.total_points;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 StatCards: Using dashboard stats total points (fallback):', userPoints);
-        }
+        // Using dashboard stats total points (fallback)
       } else {
         userPoints = 0;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 StatCards: No point data available');
-        }
+        // No point data available
       }
 
       let activitiesCount = 0;
@@ -75,22 +106,17 @@ export const StatCards = () => {
       if (dashboardStats?.current_period?.activities_completed !== undefined) {
         // Use dashboard stats for activities completed
         activitiesCount = dashboardStats.current_period.activities_completed;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 Using dashboard stats activities completed:', activitiesCount);
-        }
+        // Using dashboard stats activities completed
       } else {
         // Fallback: calculated total from activity feed
         // This fallback gets updated when refreshDashboardData() is called
         activitiesCount = totalActivities || 0;
-        // Reduced logging for performance
-        if (Math.random() < 0.05) {
-          console.log('📊 Using calculated activities from activity feed (fallback):', activitiesCount);
-          console.log('⚠️ Fallback data used - consider calling refreshDashboardData() to update');
-        }
+        // Using calculated activities from activity feed (fallback)
+        console.warn('⚠️ Fallback data used - consider calling refreshDashboardData() to update');
       }
 
       let availableIncentives = 0;
+      let nextRewardInfo = null;
 
       // Calculate available rewards from shared data
       if (availableRewards && Array.isArray(availableRewards)) {
@@ -100,30 +126,40 @@ export const StatCards = () => {
           const inStock = reward.stock_available === undefined || reward.stock_available > 0;
           return canAfford && canRedeem && inStock;
         }).length;
+
+        // Find the next locked reward (same logic as rewards page)
+        const lockedRewards = availableRewards.filter(r => {
+          const isAvailable = r.stock_available === undefined || r.stock_available > 0;
+          const isUnaffordable = userPoints < r.points_required;
+          return isAvailable && isUnaffordable;
+        }).sort((a, b) => a.points_required - b.points_required);
+
+        if (lockedRewards.length > 0) {
+          const nextReward = lockedRewards[0];
+          const pointsNeeded = nextReward.points_required - userPoints;
+          nextRewardInfo = {
+            pointsNeeded,
+            rewardName: nextReward.name
+          };
+        }
       }
 
       setStats({
         totalPoints: userPoints,
         activitiesCompleted: activitiesCount,
         availableRewards: availableIncentives,
+        nextRewardInfo,
         loading: sharedDataLoading
       });
       
-      // Reduced logging for performance
-      if (Math.random() < 0.05) {
-        console.log('📊 StatCards updated:', { 
-          userPoints, 
-          activitiesCount, 
-          availableIncentives,
-          dataSource: userProfile?.total_points !== undefined ? 'user_profile_api' : (dashboardStats?.current_period?.total_points !== undefined ? 'dashboard_stats_api' : 'no_data')
-        });
-      }
+      // StatCards updated successfully
     } catch (error) {
-      console.error('Error updating stats:', error);
+      // Error updating stats
       setStats({
         totalPoints: userProfile?.total_points || dashboardStats?.current_period?.total_points || 0,
         activitiesCompleted: dashboardStats?.current_period?.activities_completed || totalActivities || 0,
         availableRewards: 0,
+        nextRewardInfo: null,
         loading: false
       });
     }
@@ -137,6 +173,7 @@ export const StatCards = () => {
         totalPoints: 0,
         activitiesCompleted: 0,
         availableRewards: 0,
+        nextRewardInfo: null,
         loading: false
       });
     }
@@ -179,17 +216,26 @@ export const StatCards = () => {
         value={stats.totalPoints.toString()}
         period={`Earned last 30 days: ${dashboardStats?.current_period?.points_earned || 0} points`}
         trend={dashboardStats?.trends?.total_points}
+        onClick={handlePointsClick}
+        clickable={true}
       />
       <Card
         title="Activities Completed"
         value={stats.activitiesCompleted.toString()}
         period="Last 30 Days"
         trend={dashboardStats?.trends?.activities_completed}
+        onClick={handleActivitiesClick}
+        clickable={true}
       />
       <Card
         title="Available Rewards"
         value={stats.availableRewards.toString()}
-        period="Ready to Redeem"
+        period={stats.nextRewardInfo 
+          ? `${stats.nextRewardInfo.pointsNeeded} points to unlock: ${stats.nextRewardInfo.rewardName}`
+          : "Ready to Redeem"
+        }
+        onClick={handleRewardsClick}
+        clickable={true}
       />
     </>
   );
@@ -215,6 +261,8 @@ const Card = ({
   value,
   period,
   trend,
+  onClick,
+  clickable = false,
 }: {
   title: string;
   value: string;
@@ -224,9 +272,26 @@ const Card = ({
     percentage: number;
     direction: 'up' | 'down';
   };
+  onClick?: () => void;
+  clickable?: boolean;
 }) => {
   return (
-    <div className="col-span-4 p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+    <div 
+      className={`col-span-4 p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm transition-all duration-300 ${
+        clickable 
+          ? 'hover:shadow-2xl hover:scale-[1.02] cursor-pointer active:scale-[0.98]' 
+          : 'hover:shadow-2xl'
+      }`}
+      onClick={clickable ? onClick : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      } : undefined}
+    >
       <div className="flex mb-4 items-start justify-between">
         <div>
           <h3 className="text-slate-600 mb-3 text-sm font-medium">{title}</h3>

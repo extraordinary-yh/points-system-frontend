@@ -18,34 +18,6 @@ import {
 export const ActivityGraph = () => {
   const { timelineData, activityFeed, totalPoints, isLoading, error, lastFetch, cacheVersion, refresh } = useSharedDashboardData();
 
-  // 🐛 DEBUG: Log timeline data updates
-  React.useEffect(() => {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString();
-    const dateStr = now.toLocaleDateString();
-    
-    console.log(`🔍 [${timeStr}] ActivityGraph: Timeline data update`, {
-      hasTimelineData: !!timelineData,
-      timelineLength: timelineData?.timeline?.length || 0,
-      totalPoints: totalPoints,
-      lastFetch: lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'never',
-      cacheVersion: cacheVersion,
-      currentDate: dateStr,
-      latestTimelineDate: timelineData?.timeline?.[timelineData.timeline.length - 1]?.date,
-      latestTimelinePoints: timelineData?.timeline?.[timelineData.timeline.length - 1]?.points_earned
-    });
-
-    if (timelineData?.timeline && timelineData.timeline.length > 0) {
-      // Show last 3 timeline entries for debugging
-      const lastThreeEntries = timelineData.timeline.slice(-3);
-      console.log(`📊 Last 3 timeline entries:`, lastThreeEntries.map(entry => ({
-        date: entry.date,
-        points_earned: entry.points_earned,
-        cumulative: entry.cumulative_points,
-        activities: entry.activities_count
-      })));
-    }
-  }, [timelineData, totalPoints, lastFetch, cacheVersion]);
 
   // Show skeleton loader while loading
   if (isLoading) {
@@ -70,7 +42,6 @@ export const ActivityGraph = () => {
 
     // 🚀 PREFER ACTIVITY FEED (fast, real-time) over timeline (slow, cached)
     if (activityFeed?.feed?.length) {
-      console.log('🚀 Using FAST activity feed data for chart instead of slow timeline');
       
       // Group activity feed by date and calculate daily totals (including redemptions)
       const dailyData: Record<string, { 
@@ -119,7 +90,6 @@ export const ActivityGraph = () => {
         
         // 🚨 CRITICAL: Ensure running total never goes negative
         if (runningTotal < 0) {
-          console.warn(`⚠️ Negative points detected for ${day.date}, clamping to 0. Net change: ${netChange}, Running total would be: ${runningTotal}`);
           runningTotal = 0;
         }
         
@@ -143,56 +113,17 @@ export const ActivityGraph = () => {
         chartDataFromFeed.forEach(item => {
           item.Points += adjustment;
         });
-        console.log('📊 Adjusted activity feed chart data:', { correctTotalPoints, calculatedFinal, adjustment });
       }
       
-      // 🐛 DEBUG: Log detailed activity feed analysis
-      console.log('🔍 Activity feed analysis:', {
-        totalFeedItems: activityFeed.feed.length,
-        activities: activityFeed.feed.filter(item => item.type === 'activity').length,
-        redemptions: activityFeed.feed.filter(item => item.type === 'redemption').length,
-        dailyDataEntries: Object.keys(dailyData).length,
-        sortedDaysCount: sortedDays.length,
-        lastThreeDays: sortedDays.slice(-3).map(day => ({
-          date: day.date,
-          points: day.points,
-          redeemed: day.redeemed,
-          net: day.points - day.redeemed,
-          activities: day.activities,
-          redemptions: day.redemptions
-        }))
-      });
-      
-      console.log('✅ Activity feed chart data:', chartDataFromFeed.slice(-3));
       return chartDataFromFeed;
     }
     
     // 🐌 FALLBACK: Use slow timeline data if activity feed unavailable
-    console.log('⚠️ Falling back to SLOW timeline data (activity feed not available)');
     if (!timelineData?.timeline?.length) return [];
     const timeline = timelineData.timeline;
     
-    // 🐛 DEBUG: Log raw timeline data before processing
-    console.log('🔍 Raw timeline data before chart processing:', {
-      timelineLength: timeline.length,
-      rawTimeline: timeline.map(item => ({
-        date: item.date,
-        points_earned: item.points_earned,
-        cumulative_points: item.cumulative_points,
-        activities_count: item.activities_count
-      })),
-      todayString: new Date().toISOString().split('T')[0]
-    });
-    
     // Sort timeline by date to ensure proper progression
     const sortedTimeline = [...timeline].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // 🐛 DEBUG: Log sorted timeline
-    console.log('🔍 Sorted timeline:', sortedTimeline.map(item => ({
-      date: item.date,
-      points_earned: item.points_earned,
-      formattedDate: formatDate(item.date)
-    })));
     
     // Calculate proper cumulative progression
     let runningTotal = 0;
@@ -211,9 +142,6 @@ export const ActivityGraph = () => {
         rawDate: item.date // Add raw date for debugging
       };
       
-      // 🐛 DEBUG: Log each chart point creation
-      console.log(`🔍 Chart point ${index}:`, chartPoint);
-      
       return chartPoint;
     });
     
@@ -226,31 +154,19 @@ export const ActivityGraph = () => {
       chartDataWithProgression.forEach(item => {
         item.Points += adjustment;
       });
-      
-      console.log('📊 ActivityGraph: Adjusted chart data to match total points:', {
-        correctTotalPoints,
-        calculatedFinal,
-        adjustment,
-        finalDisplayTotal: chartDataWithProgression[chartDataWithProgression.length - 1]?.Points
-      });
     }
-    
-    // 🐛 DEBUG: Log final chart data before return
-    console.log('🔍 Final chart data for rendering:', {
-      totalPoints: chartDataWithProgression.length,
-      firstPoint: chartDataWithProgression[0],
-      lastPoint: chartDataWithProgression[chartDataWithProgression.length - 1],
-      allDates: chartDataWithProgression.map(p => ({ name: p.name, rawDate: p.rawDate }))
-    });
     
     return chartDataWithProgression;
   })();
 
   return (
-    <div className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col">
+    <div 
+      className="col-span-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm flex flex-col"
+      data-section="point-tracker"
+    >
       {/* Modern header with glassmorphism effect */}
       <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm border-b border-slate-200/50">
-        <h3 className="flex items-center justify-between font-semibold text-slate-800">
+        <h3 className="flex items-center font-semibold text-slate-800">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
               <FiUser className="text-white text-sm" />
@@ -259,33 +175,7 @@ export const ActivityGraph = () => {
               Point Tracker
             </span>
           </div>
-          
-          {/* 🐛 DEBUG: Manual refresh button */}
-          <button 
-            onClick={() => {
-              console.log('🔄 Manual refresh triggered from ActivityGraph');
-              refresh(true);
-            }}
-            className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
-            title="Debug: Force refresh timeline data"
-          >
-            🔄 Refresh
-          </button>
         </h3>
-        
-        {/* 🐛 DEBUG: Show data freshness info */}
-        {lastFetch && (
-          <p className="text-xs text-slate-500 mt-1">
-            Last update: {new Date(lastFetch).toLocaleTimeString()} 
-            {activityFeed?.feed?.length ? (
-              <span className="text-emerald-600"> | 🚀 Using FAST activity feed</span>
-            ) : timelineData?.timeline ? (
-              <span className="text-amber-600"> | 🐌 Using slow timeline data</span>
-            ) : (
-              <span className="text-red-600"> | ❌ No data available</span>
-            )}
-          </p>
-        )}
       </div>
 
       <div className="flex-1 p-6">

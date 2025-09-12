@@ -16,7 +16,7 @@ export const ConsentAgreement = ({ userName, onComplete }: ConsentAgreementProps
 
   const handleConsentSubmit = async (consented: boolean) => {
     if (!session?.djangoAccessToken) {
-      console.error('No auth token available');
+      // No auth token available
       onComplete(consented);
       return;
     }
@@ -24,9 +24,9 @@ export const ConsentAgreement = ({ userName, onComplete }: ConsentAgreementProps
     setIsSubmitting(true);
     try {
       await apiService.updateConsentStatus(consented, session.djangoAccessToken);
-      console.log(`Consent ${consented ? 'granted' : 'declined'} successfully`);
+      // Consent status updated successfully
     } catch (error) {
-      console.error('Failed to update consent status:', error);
+      // Failed to update consent status
       // Continue anyway - don't block user experience
     } finally {
       setIsSubmitting(false);
