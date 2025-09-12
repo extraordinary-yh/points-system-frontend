@@ -78,7 +78,7 @@ export default function ProfilePage() {
         </div>
         
         {/* Profile Content */}
-        <div className="content-fade-in-blur">
+        <div className="content-fade-in-stagger">
           <div className="px-4 space-y-6">
             {/* Profile Form - Personal Information & Account Settings */}
             <ProfileForm 

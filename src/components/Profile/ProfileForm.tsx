@@ -237,7 +237,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* First Name */}
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               First Name
             </label>
@@ -256,7 +256,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           </div>
 
           {/* Last Name */}
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Last Name
             </label>
@@ -275,7 +275,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           </div>
 
           {/* University */}
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               University
             </label>
@@ -294,7 +294,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           </div>
 
           {/* Major */}
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Major
             </label>
@@ -313,7 +313,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           </div>
 
           {/* Graduation Year */}
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Graduation Year
             </label>
@@ -354,7 +354,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
         
         <div className="space-y-4">
           {/* Media Consent */}
-          <div className="flex items-start justify-between">
+          <div className="profile-field flex items-start justify-between">
             <div className="flex-1">
               <label className="block text-sm font-medium text-stone-700">
                 Media Consent Agreement
@@ -402,28 +402,28 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
         <h3 className="text-lg font-semibold text-stone-900 mb-4">Account Information</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Username
             </label>
             <p className="text-stone-900 py-2">{user.username}</p>
           </div>
 
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Email Address
             </label>
             <p className="text-stone-900 py-2">{user.email}</p>
           </div>
 
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Member Since
             </label>
             <p className="text-stone-900 py-2">{formatMemberSince(user.created_at)}</p>
           </div>
 
-          <div>
+          <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Account Type
             </label>
