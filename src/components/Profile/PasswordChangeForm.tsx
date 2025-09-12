@@ -186,7 +186,7 @@ export function PasswordChangeForm() {
   );
 
   return (
-    <div className="bg-white border border-stone-200 rounded-lg p-6">
+    <div className="glass-card p-6">
       <div className="flex items-center mb-4">
         <FiLock className="mr-2 text-stone-600" size={20} />
         <h3 className="text-lg font-semibold text-stone-900">Change Password</h3>

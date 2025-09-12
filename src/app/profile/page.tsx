@@ -48,7 +48,7 @@ export default function ProfilePage() {
         isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
       }`}>
         <Sidebar />
-        <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto flex items-center justify-center">
+        <div className="glass-card pb-4 h-full overflow-y-auto flex items-center justify-center">
           <div className="text-xl text-stone-600">
             Loading profile...
           </div>
@@ -62,7 +62,7 @@ export default function ProfilePage() {
       isCollapsed ? 'grid-cols-[64px,_1fr]' : 'grid-cols-[256px,_1fr]'
     }`}>
       <Sidebar />
-      <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto">
+      <div className="glass-card pb-4 h-full overflow-y-auto">
         {/* Header - Consistent with other pages */}
         <div className="border-b px-4 my-4 pb-4 border-stone-200">
           <div className="flex items-center justify-between p-0.5">

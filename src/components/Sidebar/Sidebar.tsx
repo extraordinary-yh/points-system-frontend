@@ -13,7 +13,7 @@ export const Sidebar = () => {
   return (
     <div className="relative w-full h-full">
       {/* Sidebar Content */}
-      <div className="bg-white border-r border-gray-200 h-full w-full">
+      <div className="bg-white border-r border-gray-200 h-full w-full rounded-lg">
         <div className="overflow-y-scroll h-full p-4 flex flex-col">
           {isCollapsed ? (
             /* Collapsed State - Show Expand Button */
