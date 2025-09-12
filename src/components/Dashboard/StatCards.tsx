@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiTrendingDown, FiTrendingUp } from "react-icons/fi";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { DashboardStats } from "../../services/api";
 import { useSharedDashboardData } from "../../hooks/useSharedDashboardData";
 
@@ -20,6 +21,7 @@ export const refreshStatCards = async () => {
 
 export const StatCards = () => {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const { 
     totalPoints, 
     totalActivities, 
@@ -28,6 +30,43 @@ export const StatCards = () => {
     userProfile,
     isLoading: sharedDataLoading 
   } = useSharedDashboardData();
+
+  // Handle click on Activities Completed card - scroll to recent activity section
+  const handleActivitiesClick = () => {
+    const recentActivityElement = document.querySelector('[data-section="recent-activity"]');
+    if (recentActivityElement) {
+      recentActivityElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+  };
+
+  // Handle click on Available Rewards card - navigate to rewards page
+  const handleRewardsClick = () => {
+    router.push('/rewards');
+  };
+
+  // Handle click on Current Points card - scroll to Point Tracker and Lifetime Earnings Chart
+  const handlePointsClick = () => {
+    // Try to find the Point Tracker first (ActivityGraph component)
+    const pointTrackerElement = document.querySelector('[data-section="point-tracker"]');
+    if (pointTrackerElement) {
+      pointTrackerElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    } else {
+      // Fallback: try to find the Lifetime Earnings Chart (UsageRadar component)
+      const lifetimeChartElement = document.querySelector('[data-section="lifetime-chart"]');
+      if (lifetimeChartElement) {
+        lifetimeChartElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }
+  };
   
   // ✅ Data Priority (FIXED - backend total_points is most current and accurate):
   // 1. userProfile.total_points (backend API - most current and accurate)
@@ -156,17 +195,23 @@ export const StatCards = () => {
         value={stats.totalPoints.toString()}
         period={`Earned last 30 days: ${dashboardStats?.current_period?.points_earned || 0} points`}
         trend={dashboardStats?.trends?.total_points}
+        onClick={handlePointsClick}
+        clickable={true}
       />
       <Card
         title="Activities Completed"
         value={stats.activitiesCompleted.toString()}
         period="Last 30 Days"
         trend={dashboardStats?.trends?.activities_completed}
+        onClick={handleActivitiesClick}
+        clickable={true}
       />
       <Card
         title="Available Rewards"
         value={stats.availableRewards.toString()}
         period="Ready to Redeem"
+        onClick={handleRewardsClick}
+        clickable={true}
       />
     </>
   );
@@ -192,6 +237,8 @@ const Card = ({
   value,
   period,
   trend,
+  onClick,
+  clickable = false,
 }: {
   title: string;
   value: string;
@@ -201,9 +248,26 @@ const Card = ({
     percentage: number;
     direction: 'up' | 'down';
   };
+  onClick?: () => void;
+  clickable?: boolean;
 }) => {
   return (
-    <div className="col-span-4 p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+    <div 
+      className={`col-span-4 p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl border border-slate-200/50 backdrop-blur-sm transition-all duration-300 ${
+        clickable 
+          ? 'hover:shadow-2xl hover:scale-[1.02] cursor-pointer active:scale-[0.98]' 
+          : 'hover:shadow-2xl'
+      }`}
+      onClick={clickable ? onClick : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      } : undefined}
+    >
       <div className="flex mb-4 items-start justify-between">
         <div>
           <h3 className="text-slate-600 mb-3 text-sm font-medium">{title}</h3>
