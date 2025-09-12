@@ -66,7 +66,7 @@ export const SystemStatus = () => {
   useEffect(() => {
     // Check if we're in development mode or if user has enabled debug mode
     const isDebugMode = process.env.NODE_ENV === 'development' || 
-                       localStorage.getItem('debug-mode') === 'true';
+                       (typeof window !== 'undefined' && localStorage.getItem('debug-mode') === 'true');
     
     if (!isDebugMode) return;
 
@@ -171,7 +171,7 @@ export const SystemStatus = () => {
 
   // Check if debug mode is enabled
   const isDebugMode = process.env.NODE_ENV === 'development' || 
-                     localStorage.getItem('debug-mode') === 'true';
+                     (typeof window !== 'undefined' && localStorage.getItem('debug-mode') === 'true');
 
   if (!isDebugMode) return null;
 
