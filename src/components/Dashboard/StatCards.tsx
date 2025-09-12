@@ -79,6 +79,7 @@ export const StatCards = () => {
     totalPoints: 0,
     activitiesCompleted: 0,
     availableRewards: 0,
+    nextRewardInfo: null as { pointsNeeded: number; rewardName: string } | null,
     loading: true
   });
 
@@ -115,6 +116,7 @@ export const StatCards = () => {
       }
 
       let availableIncentives = 0;
+      let nextRewardInfo = null;
 
       // Calculate available rewards from shared data
       if (availableRewards && Array.isArray(availableRewards)) {
@@ -124,12 +126,29 @@ export const StatCards = () => {
           const inStock = reward.stock_available === undefined || reward.stock_available > 0;
           return canAfford && canRedeem && inStock;
         }).length;
+
+        // Find the next locked reward (same logic as rewards page)
+        const lockedRewards = availableRewards.filter(r => {
+          const isAvailable = r.stock_available === undefined || r.stock_available > 0;
+          const isUnaffordable = userPoints < r.points_required;
+          return isAvailable && isUnaffordable;
+        }).sort((a, b) => a.points_required - b.points_required);
+
+        if (lockedRewards.length > 0) {
+          const nextReward = lockedRewards[0];
+          const pointsNeeded = nextReward.points_required - userPoints;
+          nextRewardInfo = {
+            pointsNeeded,
+            rewardName: nextReward.name
+          };
+        }
       }
 
       setStats({
         totalPoints: userPoints,
         activitiesCompleted: activitiesCount,
         availableRewards: availableIncentives,
+        nextRewardInfo,
         loading: sharedDataLoading
       });
       
@@ -140,6 +159,7 @@ export const StatCards = () => {
         totalPoints: userProfile?.total_points || dashboardStats?.current_period?.total_points || 0,
         activitiesCompleted: dashboardStats?.current_period?.activities_completed || totalActivities || 0,
         availableRewards: 0,
+        nextRewardInfo: null,
         loading: false
       });
     }
@@ -153,6 +173,7 @@ export const StatCards = () => {
         totalPoints: 0,
         activitiesCompleted: 0,
         availableRewards: 0,
+        nextRewardInfo: null,
         loading: false
       });
     }
@@ -209,7 +230,10 @@ export const StatCards = () => {
       <Card
         title="Available Rewards"
         value={stats.availableRewards.toString()}
-        period="Ready to Redeem"
+        period={stats.nextRewardInfo 
+          ? `${stats.nextRewardInfo.pointsNeeded} points to unlock: ${stats.nextRewardInfo.rewardName}`
+          : "Ready to Redeem"
+        }
         onClick={handleRewardsClick}
         clickable={true}
       />
