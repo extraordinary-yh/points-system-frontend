@@ -2,6 +2,356 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Fade-in Animation System */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Base fade-in class - applied to all elements by default */
+.fade-in {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.fade-in-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.fade-in-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.fade-in-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.fade-in-delay-4 {
+  animation-delay: 0.4s;
+}
+
+.fade-in-delay-5 {
+  animation-delay: 0.5s;
+}
+
+.fade-in-delay-6 {
+  animation-delay: 0.6s;
+}
+
+.fade-in-delay-7 {
+  animation-delay: 0.7s;
+}
+
+.fade-in-delay-8 {
+  animation-delay: 0.8s;
+}
+
+/* Different animation directions */
+.fade-in-left {
+  opacity: 0;
+  animation: fadeInLeft 0.6s ease-out forwards;
+}
+
+.fade-in-right {
+  opacity: 0;
+  animation: fadeInRight 0.6s ease-out forwards;
+}
+
+.fade-in-scale {
+  opacity: 0;
+  animation: fadeInScale 0.6s ease-out forwards;
+}
+
+/* Faster animations for smaller elements */
+.fade-in-fast {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* Slower animations for important elements */
+.fade-in-slow {
+  opacity: 0;
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+/* Content fade-in animations - only for content inside pages */
+.content-fade-in {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Different fade-in animation styles for experimentation */
+
+/* 1. Fade in from left */
+.content-fade-in-left {
+  opacity: 0;
+  animation: fadeInLeft 0.6s ease-out forwards;
+}
+
+/* 2. Fade in from right */
+.content-fade-in-right {
+  opacity: 0;
+  animation: fadeInRight 0.6s ease-out forwards;
+}
+
+/* 3. Scale up fade in */
+.content-fade-in-scale {
+  opacity: 0;
+  animation: fadeInScale 0.6s ease-out forwards;
+}
+
+/* 4. Bounce fade in */
+.content-fade-in-bounce {
+  opacity: 0;
+  animation: fadeInBounce 0.8s ease-out forwards;
+}
+
+/* 5. Slide up with spring */
+.content-fade-in-spring {
+  opacity: 0;
+  animation: fadeInSpring 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* 6. Fade in with rotation */
+.content-fade-in-rotate {
+  opacity: 0;
+  animation: fadeInRotate 0.6s ease-out forwards;
+}
+
+/* 7. Fade in with blur effect */
+.content-fade-in-blur {
+  opacity: 0;
+  filter: blur(10px);
+  animation: fadeInBlur 0.8s ease-out forwards;
+}
+
+/* 8. Staggered children fade in */
+.content-fade-in-stagger {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.content-fade-in-stagger > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.content-fade-in-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+.content-fade-in-stagger > *:nth-child(2) { animation-delay: 0.2s; }
+.content-fade-in-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+.content-fade-in-stagger > *:nth-child(4) { animation-delay: 0.4s; }
+.content-fade-in-stagger > *:nth-child(5) { animation-delay: 0.5s; }
+.content-fade-in-stagger > *:nth-child(6) { animation-delay: 0.6s; }
+
+/* Animation keyframes for new effects */
+@keyframes fadeInBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInSpring {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInRotate {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) rotate(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes fadeInBlur {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0);
+  }
+}
+
+/* Delay classes for all styles */
+.content-fade-in-delay-1 { animation-delay: 0.1s; }
+.content-fade-in-delay-2 { animation-delay: 0.2s; }
+.content-fade-in-delay-3 { animation-delay: 0.3s; }
+.content-fade-in-delay-4 { animation-delay: 0.4s; }
+.content-fade-in-delay-5 { animation-delay: 0.5s; }
+.content-fade-in-delay-6 { animation-delay: 0.6s; }
+.content-fade-in-delay-7 { animation-delay: 0.7s; }
+.content-fade-in-delay-8 { animation-delay: 0.8s; }
+
+/* Keep the old fade-in class for backward compatibility */
+.fade-in {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Explicitly exclude sidebar from all animations */
+main > *:first-child,
+[class*="sidebar"], 
+[class*="Sidebar"], 
+aside, 
+nav[role="navigation"] {
+  opacity: 1 !important;
+  animation: none !important;
+}
+
+/* Apply to dashboard grid items */
+.grid > * {
+  opacity: 0;
+  animation: fadeInScale 0.5s ease-out forwards;
+}
+
+.grid > *:nth-child(1) { animation-delay: 0.1s; }
+.grid > *:nth-child(2) { animation-delay: 0.2s; }
+.grid > *:nth-child(3) { animation-delay: 0.3s; }
+.grid > *:nth-child(4) { animation-delay: 0.4s; }
+.grid > *:nth-child(5) { animation-delay: 0.5s; }
+.grid > *:nth-child(6) { animation-delay: 0.6s; }
+.grid > *:nth-child(7) { animation-delay: 0.7s; }
+.grid > *:nth-child(8) { animation-delay: 0.8s; }
+
+/* Apply to card elements */
+.glass-card {
+  opacity: 0;
+  animation: fadeInScale 0.6s ease-out forwards;
+}
+
+/* Apply to list items */
+ul > li, ol > li {
+  opacity: 0;
+  animation: fadeInLeft 0.5s ease-out forwards;
+}
+
+ul > li:nth-child(1), ol > li:nth-child(1) { animation-delay: 0.1s; }
+ul > li:nth-child(2), ol > li:nth-child(2) { animation-delay: 0.2s; }
+ul > li:nth-child(3), ol > li:nth-child(3) { animation-delay: 0.3s; }
+ul > li:nth-child(4), ol > li:nth-child(4) { animation-delay: 0.4s; }
+ul > li:nth-child(5), ol > li:nth-child(5) { animation-delay: 0.5s; }
+ul > li:nth-child(6), ol > li:nth-child(6) { animation-delay: 0.6s; }
+ul > li:nth-child(7), ol > li:nth-child(7) { animation-delay: 0.7s; }
+ul > li:nth-child(8), ol > li:nth-child(8) { animation-delay: 0.8s; }
+
+/* Apply to table rows */
+tbody > tr {
+  opacity: 0;
+  animation: fadeInLeft 0.4s ease-out forwards;
+}
+
+tbody > tr:nth-child(1) { animation-delay: 0.1s; }
+tbody > tr:nth-child(2) { animation-delay: 0.15s; }
+tbody > tr:nth-child(3) { animation-delay: 0.2s; }
+tbody > tr:nth-child(4) { animation-delay: 0.25s; }
+tbody > tr:nth-child(5) { animation-delay: 0.3s; }
+tbody > tr:nth-child(6) { animation-delay: 0.35s; }
+tbody > tr:nth-child(7) { animation-delay: 0.4s; }
+tbody > tr:nth-child(8) { animation-delay: 0.45s; }
+tbody > tr:nth-child(9) { animation-delay: 0.5s; }
+tbody > tr:nth-child(10) { animation-delay: 0.55s; }
+
+/* Apply to form elements */
+form > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+form > *:nth-child(1) { animation-delay: 0.1s; }
+form > *:nth-child(2) { animation-delay: 0.2s; }
+form > *:nth-child(3) { animation-delay: 0.3s; }
+form > *:nth-child(4) { animation-delay: 0.4s; }
+form > *:nth-child(5) { animation-delay: 0.5s; }
+form > *:nth-child(6) { animation-delay: 0.6s; }
+form > *:nth-child(7) { animation-delay: 0.7s; }
+form > *:nth-child(8) { animation-delay: 0.8s; }
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in,
+  .fade-in-left,
+  .fade-in-right,
+  .fade-in-scale,
+  .fade-in-fast,
+  .fade-in-slow,
+  main > *,
+  .grid > *,
+  .glass-card,
+  ul > li,
+  ol > li,
+  tbody > tr,
+  form > * {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* Skeleton Loading Animations */
 @keyframes shimmer {
   0% {

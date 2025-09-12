@@ -24,6 +24,7 @@ const LeaderboardPage = () => {
     }
   }, [period, session, status]);
 
+
     const fetchLeaderboard = async () => {
     try {
       setLoading(true);
@@ -205,6 +206,7 @@ const LeaderboardPage = () => {
     }`}>
       <Sidebar />
       <div className="bg-white rounded-lg shadow h-full overflow-y-auto">
+        <div className="content-fade-in">
         {/* Page Header */}
         <div className="border-b px-4 mt-4 pb-4 border-stone-200">
             <div className="flex items-center justify-between p-0.5">
@@ -520,6 +522,7 @@ const LeaderboardPage = () => {
                         {/* Current User Rank section removed - now using properly aligned table format above */}
           </>
         ) : null}
+        </div>
       </div>
     </main>
   );

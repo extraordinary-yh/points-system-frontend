@@ -35,7 +35,9 @@ export default function RewardsPage() {
     }`}>
       <Sidebar />
       <div className="bg-white rounded-lg pb-4 shadow h-full overflow-y-auto">
-        <RewardsContent />
+        <div className="content-fade-in-scale">
+          <RewardsContent />
+        </div>
       </div>
     </main>
   );
@@ -130,6 +132,7 @@ const RewardsContent = () => {
 
     fetchRewardsData();
   }, [session]);
+
 
   const handleRedeem = async (rewardId: number) => {
     if (!session?.djangoAccessToken) return;
