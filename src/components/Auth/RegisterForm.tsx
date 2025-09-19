@@ -131,6 +131,31 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
       return;
     }
 
+    // Validate required fields for students
+    if (formData.role === 'student') {
+      const requiredFields = ['university', 'major', 'graduation_year', 'track'];
+      const missingFields = requiredFields.filter(field => {
+        const value = formData[field as keyof typeof formData];
+        return !value || value === '';
+      });
+
+      if (missingFields.length > 0) {
+        const fieldLabels = {
+          university: 'University',
+          major: 'Major',
+          graduation_year: 'Expected Graduation Year',
+          track: 'Career Track'
+        };
+        
+        missingFields.forEach(field => {
+          showFieldError(field, `${fieldLabels[field as keyof typeof fieldLabels]} is required`);
+        });
+        
+        setRegistrationError('Please fill in all required fields before continuing.');
+        return;
+      }
+    }
+
     setRegistrationLoading(true);
     setRegistrationError('');
     clearAllFieldErrors(); // Clear any previous field errors
@@ -623,12 +648,13 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
               <>
                 <div>
                   <label htmlFor="university" className="block text-sm font-medium text-stone-700">
-                    University
+                    University *
                   </label>
                   <input
                     id="university"
                     name="university"
                     type="text"
+                    required
                     className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500 ${
                       fieldErrors.university 
                         ? 'border-red-500 bg-red-50' 
@@ -644,12 +670,13 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
 
                 <div>
                   <label htmlFor="major" className="block text-sm font-medium text-stone-700">
-                    Major
+                    Major *
                   </label>
                   <input
                     id="major"
                     name="major"
                     type="text"
+                    required
                     className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500 ${
                       fieldErrors.major 
                         ? 'border-red-500 bg-red-50' 
@@ -665,12 +692,13 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
 
                 <div>
                   <label htmlFor="graduation_year" className="block text-sm font-medium text-stone-700">
-                    Expected Graduation Year
+                    Expected Graduation Year *
                   </label>
                   <input
                     id="graduation_year"
                     name="graduation_year"
                     type="number"
+                    required
                     min={2023}
                     max={new Date().getFullYear() + 10}
                     className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500 ${
@@ -689,7 +717,7 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
                 {/* Career Track Selection */}
                 <div>
                   <label htmlFor="track" className="block text-sm font-medium text-stone-700">
-                    Career Track
+                    Career Track *
                   </label>
                   {isLoadingTracks ? (
                     <div className="mt-1 flex items-center text-stone-500 py-2">
@@ -700,6 +728,7 @@ export const RegisterForm = ({ onSwitchToLogin }: { onSwitchToLogin: () => void 
                     <select
                       id="track"
                       name="track"
+                      required
                       className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500"
                       value={formData.track}
                       onChange={handleChange}
