@@ -106,6 +106,27 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
     e.preventDefault();
     if (!session?.djangoAccessToken) return;
 
+    // Validate required fields for students
+    if (user.role === 'student') {
+      const requiredFields = ['university', 'major', 'graduation_year'];
+      const missingFields = requiredFields.filter(field => {
+        const value = formData[field as keyof typeof formData];
+        return !value || value === '';
+      });
+
+      if (missingFields.length > 0) {
+        const fieldLabels = {
+          university: 'University',
+          major: 'Major',
+          graduation_year: 'Graduation Year'
+        };
+        
+        const missingFieldNames = missingFields.map(field => fieldLabels[field as keyof typeof fieldLabels]).join(', ');
+        setError(`Please fill in all required fields: ${missingFieldNames}`);
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     setSuccess(null);
@@ -338,7 +359,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           {/* University */}
           <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              University
+              University {user.role === 'student' && <span className="text-red-500">*</span>}
             </label>
             {isEditing ? (
               <input
@@ -346,6 +367,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
                 name="university"
                 value={formData.university}
                 onChange={handleInputChange}
+                required={user.role === 'student'}
                 className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your university"
               />
@@ -357,7 +379,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           {/* Major */}
           <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              Major
+              Major {user.role === 'student' && <span className="text-red-500">*</span>}
             </label>
             {isEditing ? (
               <input
@@ -365,6 +387,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
                 name="major"
                 value={formData.major}
                 onChange={handleInputChange}
+                required={user.role === 'student'}
                 className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your major"
               />
@@ -376,7 +399,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
           {/* Graduation Year */}
           <div className="profile-field">
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              Graduation Year
+              Graduation Year {user.role === 'student' && <span className="text-red-500">*</span>}
             </label>
             {isEditing ? (
               <input
@@ -384,6 +407,7 @@ export function ProfileForm({ user, onProfileUpdate }: ProfileFormProps) {
                 name="graduation_year"
                 value={formData.graduation_year || ''}
                 onChange={handleInputChange}
+                required={user.role === 'student'}
                 min="2020"
                 max="2035"
                 className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
