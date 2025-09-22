@@ -45,10 +45,9 @@ export const ActivityGraph = () => {
       
       // Group activity feed by date and calculate daily totals (including redemptions)
       const dailyData: Record<string, { 
-        points: number, 
+        totalChange: number, 
         activities: number, 
         redemptions: number,
-        redeemed: number,
         date: string 
       }> = {};
       
@@ -57,22 +56,34 @@ export const ActivityGraph = () => {
         
         if (!dailyData[dateKey]) {
           dailyData[dateKey] = { 
-            points: 0, 
+            totalChange: 0, // Track total net change for the day
             activities: 0, 
             redemptions: 0,
-            redeemed: 0,
             date: dateKey 
           };
         }
         
-        if (item.type === 'activity' && item.points_change > 0) {
-          // Only count positive point changes (earnings)
-          dailyData[dateKey].points += item.points_change;
+        if (item.type === 'activity') {
+          // Count ALL activity point changes (both positive and negative)
+          dailyData[dateKey].totalChange += item.points_change;
           dailyData[dateKey].activities += 1;
-        } else if (item.type === 'redemption' && item.points_change < 0) {
-          // Count redemptions (negative point changes)
-          dailyData[dateKey].redeemed += Math.abs(item.points_change); // Store as positive number
+        } else if (item.type === 'redemption') {
+          // Count ALL redemption point changes (typically negative)
+          console.log(`🔍 REDEMPTION FOUND:`, {
+            date: dateKey,
+            points_change: item.points_change,
+            description: item.description,
+            reward_name: item.reward_name
+          });
+          dailyData[dateKey].totalChange += item.points_change;
           dailyData[dateKey].redemptions += 1;
+        } else {
+          // Log any unexpected types
+          console.log(`⚠️ UNKNOWN TYPE:`, {
+            type: item.type,
+            points_change: item.points_change,
+            description: item.description
+          });
         }
       });
       
@@ -81,37 +92,47 @@ export const ActivityGraph = () => {
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
       
-      // Calculate cumulative totals (ensure no negative points)
-      let runningTotal = 0;
-      const chartDataFromFeed = sortedDays.map((day, index) => {
-        // Calculate net change for the day
-        const netChange = day.points - day.redeemed;
-        runningTotal += netChange;
+      // Debug: Log daily totals to verify redemptions are included
+      console.log(`📊 DAILY TOTALS:`, sortedDays.map(day => ({
+        date: day.date,
+        totalChange: day.totalChange,
+        activities: day.activities,
+        redemptions: day.redemptions
+      })));
+      
+      // 🚀 CORRECT APPROACH: Calculate backward from current total points
+      // Work backward through time to get accurate historical progression
+      let runningTotal = correctTotalPoints; // Start with current total
+      const chartDataFromFeed = [];
+      
+      // Work backward through the sorted days (reverse order)
+      for (let i = sortedDays.length - 1; i >= 0; i--) {
+        const day = sortedDays[i];
+        const netChange = day.totalChange; // Use the total change directly
         
-        // 🚨 CRITICAL: Ensure running total never goes negative
-        if (runningTotal < 0) {
-          runningTotal = 0;
-        }
+        // Store the current running total for this day (before we subtract)
+        const pointsAtEndOfDay = runningTotal;
         
-        return {
+        // Move backward in time by subtracting this day's net change
+        runningTotal -= netChange;
+        
+        // Ensure we never show negative points in history
+        const displayPoints = Math.max(0, pointsAtEndOfDay);
+        
+        // Separate positive and negative changes for tooltip display
+        const positiveChanges = day.totalChange > 0 ? day.totalChange : 0;
+        const negativeChanges = day.totalChange < 0 ? Math.abs(day.totalChange) : 0;
+        
+        // Add to beginning of array since we're working backward
+        chartDataFromFeed.unshift({
           name: formatDate(day.date),
-          Points: runningTotal,
-          Daily: day.points,
-          Redeemed: day.redeemed,
+          Points: displayPoints,
+          Daily: positiveChanges, // Positive changes for tooltip
+          Redeemed: negativeChanges, // Negative changes for tooltip
           Net: netChange,
           Redemptions: day.redemptions,
           rawDate: day.date,
           dataSource: 'activity-feed' // Mark data source for debugging
-        };
-      });
-      
-      // Adjust to match total points
-      const calculatedFinal = chartDataFromFeed[chartDataFromFeed.length - 1]?.Points || 0;
-      const adjustment = correctTotalPoints - calculatedFinal;
-      
-      if (Math.abs(adjustment) > 0) {
-        chartDataFromFeed.forEach(item => {
-          item.Points += adjustment;
         });
       }
       
@@ -125,34 +146,33 @@ export const ActivityGraph = () => {
     // Sort timeline by date to ensure proper progression
     const sortedTimeline = [...timeline].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    // Calculate proper cumulative progression
-    let runningTotal = 0;
-    const chartDataWithProgression = sortedTimeline.map((item, index) => {
-      // Add daily net points to running total
+    // 🚀 CORRECT APPROACH: Calculate backward from current total points (same as activity feed)
+    let runningTotal = correctTotalPoints; // Start with current total
+    const chartDataWithProgression = [];
+    
+    // Work backward through the sorted timeline (reverse order)
+    for (let i = sortedTimeline.length - 1; i >= 0; i--) {
+      const item = sortedTimeline[i];
       const dailyNet = (item.points_earned || 0) - (item.points_redeemed || 0);
-      runningTotal += dailyNet;
       
-      const chartPoint = {
+      // Store the current running total for this day (before we subtract)
+      const pointsAtEndOfDay = runningTotal;
+      
+      // Move backward in time by subtracting this day's net change
+      runningTotal -= dailyNet;
+      
+      // Ensure we never show negative points in history
+      const displayPoints = Math.max(0, pointsAtEndOfDay);
+      
+      // Add to beginning of array since we're working backward
+      chartDataWithProgression.unshift({
         name: formatDate(item.date),
-        Points: runningTotal, // Use calculated running total
+        Points: displayPoints,
         Daily: item.points_earned || 0,
         Redeemed: item.points_redeemed || 0,
         Net: dailyNet,
         Redemptions: item.redemptions_count || 0,
         rawDate: item.date // Add raw date for debugging
-      };
-      
-      return chartPoint;
-    });
-    
-    // Adjust final total to match the correct total points from activity feed
-    const calculatedFinal = chartDataWithProgression[chartDataWithProgression.length - 1]?.Points || 0;
-    const adjustment = correctTotalPoints - calculatedFinal;
-    
-    // Apply adjustment to all points if needed
-    if (Math.abs(adjustment) > 0) {
-      chartDataWithProgression.forEach(item => {
-        item.Points += adjustment;
       });
     }
     
