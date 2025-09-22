@@ -49,6 +49,12 @@ const RewardsContent = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'available' | 'history'>('available');
   const [redeeming, setRedeeming] = useState<number | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [redemptionSuccess, setRedemptionSuccess] = useState<{
+    rewardName: string;
+    pointsSpent: number;
+    remainingPoints: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchRewardsData = async () => {
@@ -131,6 +137,19 @@ const RewardsContent = () => {
     fetchRewardsData();
   }, [session]);
 
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showSuccessModal) {
+        setShowSuccessModal(false);
+      }
+    };
+
+    if (showSuccessModal) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [showSuccessModal]);
 
   const handleRedeem = async (rewardId: number) => {
     if (!session?.djangoAccessToken) return;
@@ -174,8 +193,19 @@ const RewardsContent = () => {
           setRedemptionHistory(refreshedHistory);
         }
         
-        // Switch to history tab to show the new redemption
-        setActiveTab('history');
+        // Get the redeemed reward details for the success modal
+        const redeemedReward = rewards.find(r => r.id === rewardId);
+        if (redeemedReward && userProfileResponse.data?.total_points !== undefined) {
+          setRedemptionSuccess({
+            rewardName: redeemedReward.name,
+            pointsSpent: redeemedReward.points_required,
+            remainingPoints: userProfileResponse.data.total_points
+          });
+          setShowSuccessModal(true);
+        } else {
+          // Fallback: switch to history tab if we can't show modal
+          setActiveTab('history');
+        }
       }
     } catch (error) {
       // Failed to redeem reward
@@ -380,6 +410,7 @@ const RewardsContent = () => {
             userPoints={currentUserPoints}
             onRedeem={handleRedeem}
             redeeming={redeeming}
+            redemptionHistory={redemptionHistory}
           />
         ) : (
           <RedemptionHistory history={redemptionHistory} />
@@ -387,6 +418,83 @@ const RewardsContent = () => {
         </div>
       </div>
       </div>
+
+      {/* Redemption Success Modal */}
+      {showSuccessModal && redemptionSuccess && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowSuccessModal(false)}
+        >
+          <div 
+            className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-8 max-w-md w-full mx-4 animate-in fade-in-0 zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">🎉</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                Reward Redemption Successful!
+              </h3>
+              <p className="text-slate-600">
+                Your redemption request has been sent to admin
+              </p>
+            </div>
+
+            {/* Reward Details */}
+            <div className="space-y-4 mb-6">
+              <div className="bg-slate-50/80 rounded-lg p-4">
+                <h4 className="font-semibold text-slate-800 mb-2">Reward Claimed:</h4>
+                <p className="text-slate-700">{redemptionSuccess.rewardName}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-red-50/80 rounded-lg p-4 text-center">
+                  <div className="text-sm text-red-600 font-medium">Points Spent</div>
+                  <div className="text-xl font-bold text-red-700">-{redemptionSuccess.pointsSpent}</div>
+                </div>
+                <div className="bg-green-50/80 rounded-lg p-4 text-center">
+                  <div className="text-sm text-green-600 font-medium">Remaining Points</div>
+                  <div className="text-xl font-bold text-green-700">{redemptionSuccess.remainingPoints}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline & Next Steps */}
+            <div className="bg-blue-50/80 rounded-lg p-4 mb-6">
+              <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                <span className="mr-2">⏰</span>
+                What happens next?
+              </h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Admin will process your request within 1-5 business days</li>
+                <li>• You'll receive a confirmation message on Discord</li>
+                <li>• Check your redemption history for status updates</li>
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setActiveTab('history');
+                }}
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                View History
+              </button>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-all duration-200"
+              >
+                Continue Shopping
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -395,12 +503,14 @@ const AvailableRewards = ({
   rewards, 
   userPoints, 
   onRedeem, 
-  redeeming 
+  redeeming,
+  redemptionHistory 
 }: {
   rewards: Incentive[];
   userPoints: number;
   onRedeem: (id: number) => void;
   redeeming: number | null;
+  redemptionHistory: Redemption[];
 }) => {
   // Helper function to get reward icon based on name/category
   const getRewardIcon = (name: string) => {
@@ -425,6 +535,25 @@ const AvailableRewards = ({
     }
   };
 
+  // Helper function to check if a reward has been claimed by the current user
+  const isRewardClaimed = (reward: Incentive): boolean => {
+    return redemptionHistory.some(redemption => {
+      // Check multiple ways a redemption can match a reward:
+      // 1. By incentive.id (old API format)
+      if (redemption.incentive?.id === reward.id) return true;
+      
+      // 2. By reward name matching (fallback method)
+      if (redemption.reward?.name === reward.name) return true;
+      if (redemption.incentive?.name === reward.name) return true;
+      
+      // 3. By any additional ID fields that might exist
+      const redeemedId = (redemption as any).reward_id || (redemption as any).incentive_id;
+      if (redeemedId === reward.id) return true;
+      
+      return false;
+    });
+  };
+
   // Helper function to determine reward status
   const getRewardStatus = (reward: Incentive): 'locked' | 'available' | 'claimed' | 'unavailable' | 'next_goal' => {
     // Check if out of stock first
@@ -432,13 +561,13 @@ const AvailableRewards = ({
       return 'unavailable';
     }
     
-    // Check if already redeemed/claimed - you may need to adjust this logic based on your API
-    if (!reward.can_redeem && userPoints >= reward.points_required) {
+    // Check if already redeemed/claimed by checking redemption history
+    if (isRewardClaimed(reward)) {
       return 'claimed';
     }
     
-    // Check if user can afford it and it's available
-    if (reward.can_redeem && userPoints >= reward.points_required && 
+    // Prioritize user having enough points over backend can_redeem restrictions
+    if (userPoints >= reward.points_required && 
         (reward.stock_available === undefined || reward.stock_available > 0)) {
       return 'available';
     }
@@ -448,11 +577,10 @@ const AvailableRewards = ({
     const lockedRewards = rewards.filter(r => {
       const isAvailable = r.stock_available === undefined || r.stock_available > 0;
       const isUnaffordable = userPoints < r.points_required;
-      // Include all rewards that are unaffordable and in stock, regardless of can_redeem status
-      return isAvailable && isUnaffordable;
+      const notClaimed = !isRewardClaimed(r);
+      // Include all rewards that are unaffordable, in stock, and not claimed
+      return isAvailable && isUnaffordable && notClaimed;
     }).sort((a, b) => a.points_required - b.points_required);
-    
-
     
     // Only the first (lowest points) locked reward should be "next_goal"
     if (lockedRewards.length > 0 && lockedRewards[0].id === reward.id) {
